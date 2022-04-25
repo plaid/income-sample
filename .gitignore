@@ -1,3 +1,10 @@
+
+# Env file that might contain actual secrets
+server/.env
+
+# User_data that might contain actual access tokens
+server/user_data.json
+
 # Logs
 logs
 *.log
