@@ -18,7 +18,7 @@ const UserStatus = (props: { income: boolean }) => {
     const response = await fetch(url);
     const data = await response.json();
     console.log(data);
-    if (data["status"] === true) {
+    if (data["status"]) {
       setConnected(PlaidConnectStatus.Connected);
     } else {
       setConnected(PlaidConnectStatus.NotConnected);
@@ -28,23 +28,25 @@ const UserStatus = (props: { income: boolean }) => {
 
   const linkFinished = async (public_token: String) => {
     console.log("Here's your public token", public_token);
-    if (props.income && public_token != null && public_token !== "") {
-      await reportThatIncomeWasGood();
-    } else {
-      await exchangeToken(public_token);
+    if (public_token != null && public_token !== "") {
+      if (props.income) {
+        await reportThatIncomeWasGood();
+      } else {
+        await exchangeToken(public_token);
+      }
     }
     await getInfo();
   };
 
-  async function reportThatIncomeWasGood() {
+  const reportThatIncomeWasGood = async () => {
     const response = await fetch("/appServer/incomeWasSuccessful", {
       method: "POST",
       headers: { "Content-type": "application/json" },
     });
     console.log(response);
-  }
+  };
 
-  async function exchangeToken(public_token: String) {
+  const exchangeToken = async (public_token: String) => {
     const response = await fetch("/appServer/swapPublicToken", {
       method: "POST",
       headers: { "Content-type": "application/json" },
@@ -53,7 +55,7 @@ const UserStatus = (props: { income: boolean }) => {
       }),
     });
     console.log(response);
-  }
+  };
 
   useEffect(() => {
     if (connected === PlaidConnectStatus.Unknown) {

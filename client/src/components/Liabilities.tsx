@@ -53,19 +53,19 @@ const Liabilities = () => {
           </tr>
         </thead>
         <tbody>
-          {userLiabilities.map((e: LiabilityData) => (
-            <tr key={e.account_id}>
+          {userLiabilities.map((liability: LiabilityData) => (
+            <tr key={liability.account_id}>
               <td align="left" style={{ maxWidth: "350px" }}>
-                {e.name}
+                {liability.name}
               </td>
-              <td align="left">{e.type}</td>
+              <td align="left">{liability.type}</td>
               <td align="right">
-                {e.amount.toLocaleString("en-US", {
+                {liability.amount.toLocaleString("en-US", {
                   style: "currency",
-                  currency: e.currencyCode,
+                  currency: liability.currencyCode,
                 })}
               </td>
-              <td align="right">{e.percentage.toFixed(2)}%</td>
+              <td align="right">{liability.percentage.toFixed(2)}%</td>
             </tr>
           ))}
         </tbody>
@@ -76,13 +76,30 @@ const Liabilities = () => {
 
 const normalizeLiabilityData = (data: any) => {
   // A little bit of work to merge these...
-  const allLiabilities: LiabilityData[] = [];
-  data.liabilities.credit?.forEach(
-    (credit: {
-      account_id: string;
-      aprs: { apr_percentage: number }[];
-      is_overdue?: boolean;
-    }) => {
+  type CreditType = {
+    account_id: string;
+    aprs: {
+      apr_percentage: number;
+    }[];
+    is_overdue?: boolean;
+  };
+  type MortgageType = {
+    account_id: string;
+    interest_rate: {
+      percentage: number;
+    };
+    is_overdue?: boolean;
+    origination_principal_amount: number;
+  };
+  type StudentLoanType = {
+    account_id: string;
+    interest_rate_percentage: number;
+    is_overdue?: boolean;
+    origination_principal_amount: number;
+  };
+
+  const creditLiabilities = data.liabilities.credit?.map(
+    (credit: CreditType) => {
       const basicAccountInfo = data.accounts.find(
         (e: { account_id: string }) => e.account_id === credit.account_id
       );
@@ -96,16 +113,12 @@ const normalizeLiabilityData = (data: any) => {
         percentage: credit.aprs[0].apr_percentage,
         overdue: credit.is_overdue ?? false,
       };
-      allLiabilities.push(newCredit);
+      return newCredit;
     }
   );
-  data.liabilities.mortgage?.forEach(
-    (mortgage: {
-      account_id: string;
-      interest_rate: { percentage: number };
-      is_overdue?: boolean;
-      origination_principal_amount: number;
-    }) => {
+
+  const mortgageLiabilities = data.liabilities.mortgage?.map(
+    (mortgage: MortgageType) => {
       const basicAccountInfo = data.accounts.find(
         (e: { account_id: string }) => e.account_id === mortgage.account_id
       );
@@ -119,16 +132,12 @@ const normalizeLiabilityData = (data: any) => {
         percentage: mortgage.interest_rate.percentage,
         overdue: mortgage.is_overdue ?? false,
       };
-      allLiabilities.push(newMortgage);
+      return newMortgage;
     }
   );
-  data.liabilities.student?.forEach(
-    (student: {
-      account_id: string;
-      interest_rate_percentage: number;
-      is_overdue?: boolean;
-      origination_principal_amount: number;
-    }) => {
+
+  const studentLiabilities = data.liabilities.student?.map(
+    (student: StudentLoanType) => {
       const basicAccountInfo = data.accounts.find(
         (e: { account_id: string }) => e.account_id === student.account_id
       );
@@ -142,10 +151,10 @@ const normalizeLiabilityData = (data: any) => {
         percentage: student.interest_rate_percentage,
         overdue: student.is_overdue ?? false,
       };
-      allLiabilities.push(newStudent);
+      return newStudent;
     }
   );
-  return allLiabilities;
+  return [...creditLiabilities, ...mortgageLiabilities, ...studentLiabilities];
 };
 
 export default Liabilities;

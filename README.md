@@ -31,9 +31,13 @@ Would you like to be the first to own a pre-owned hoverboard? Well, you're in lu
 
 When you first start up the app, you'll be prompted to both connect to a bank to load up your liabilities, but also connect to your Payroll provider to load up your sources of income! (Once you've done that, we then provide you with the opportunity to add additional sources of income -- either from payroll or from the bank)
 
+When asked to connect to a bank while in Sandbox mode, supply the credentials `user_good` and `pass_good` and the MFA code of `1234` if you're asked for it.
+
 ### TODOs
 
 - See what happens if you provide existing access tokens when creating a link token for bank income
+- Add error messaging somewhere in the app for if people forget to fill out the .env or fill it out incorrectly
+- Make sure we don't flip out if you try to use Document Income in a non-Sandbox environment, before the data is ready.
 - Add in the payroll income precheck
 - Add a little more styling, maybe?
 - Clean up my camel vs snake vs kebab case inconsistencies

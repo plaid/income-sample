@@ -30,7 +30,7 @@ export default function LaunchLink(props: Props) {
     error: PlaidLinkError | null,
     metadata: PlaidLinkOnExitMetadata
   ) => {
-    console.log(`Awww...${error}`);
+    console.log(`Awww...${JSON.stringify(error)}`);
     console.log(metadata);
   };
 

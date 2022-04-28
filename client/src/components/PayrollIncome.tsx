@@ -25,10 +25,12 @@ const PayrollIncome = () => {
     const response = await fetch("/appServer/getPayrollIncome");
     const data = await response.json();
     console.log("Payroll Income: ", data);
-    const allPayrollIncome = data.items.reduce(
-      (prev: any, curr: any) => prev.concat(curr.payroll_income),
-      []
-    );
+    const allPayrollIncome = data.items
+      .reduce((prev: any, curr: any) => prev.concat(curr.payroll_income), [])
+      .filter(
+        (e: { pay_stubs: any[] | null }) =>
+          e.pay_stubs != null && e.pay_stubs.length > 0
+      );
 
     const thisUsersIncome: Array<PayrollData> = allPayrollIncome.map(
       (e: { pay_stubs: any[]; account_id?: string }) => {
@@ -78,31 +80,31 @@ const PayrollIncome = () => {
           </tr>
         </thead>
         <tbody>
-          {payrollIncome.map((e: PayrollData, idx) => (
+          {payrollIncome.map((payroll: PayrollData, idx) => (
             <tr key={idx}>
               <td align="left" style={{ maxWidth: "350px" }}>
-                {e.employer}
+                {payroll.employer}
               </td>
               <td align="right">
-                {e.ytd_gross.toLocaleString("en-US", {
+                {payroll.ytd_gross.toLocaleString("en-US", {
                   style: "currency",
                   currency: hardCodedCurrencyCode,
                 })}
               </td>
               <td align="right">
-                {e.ytd_net.toLocaleString("en-US", {
+                {payroll.ytd_net.toLocaleString("en-US", {
                   style: "currency",
                   currency: hardCodedCurrencyCode,
                 })}
               </td>
               <td align="right">
-                {e.pay_period_gross.toLocaleString("en-US", {
+                {payroll.pay_period_gross.toLocaleString("en-US", {
                   style: "currency",
                   currency: hardCodedCurrencyCode,
                 })}
               </td>
-              <td>{e.pay_period_frequency}</td>
-              <td>{e.downloaded_from_provider ? "✅" : ""}</td>
+              <td>{payroll.pay_period_frequency}</td>
+              <td>{payroll.downloaded_from_provider ? "✅" : ""}</td>
             </tr>
           ))}
         </tbody>

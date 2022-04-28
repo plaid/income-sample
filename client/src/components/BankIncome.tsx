@@ -25,32 +25,35 @@ const BankIncome = () => {
     console.log("Bank Income: ", data);
     const thisUsersIncome = Array<BankData>();
 
+    type BankItemType = {
+      // insitution [sic] until next API update
+      insitution_name: string;
+      bank_income_sources: {
+        total_amount: number;
+        transaction_count: number;
+        income_description: number;
+      }[];
+    };
+
+    type BankIncomeType = {
+      items: BankItemType[];
+    };
+
     // TODO: This could probably be done with a clever enough flatmap
-    data.bank_income?.forEach(
-      (report: {
-        items: {
-          insitution_name: string;
-          bank_income_sources: {
-            total_amount: number;
-            transaction_count: number;
-            income_description: number;
-          }[];
-        }[];
-      }) => {
-        report.items.forEach((item) => {
-          const insitution_name = item.insitution_name;
-          item.bank_income_sources.forEach((source) => {
-            const nextItem: BankData = {
-              bank_name: insitution_name,
-              total_amount: source.total_amount,
-              transaction_count: source.transaction_count,
-              description: source.income_description,
-            };
-            thisUsersIncome.push(nextItem);
-          });
+    data.bank_income?.forEach((report: BankIncomeType) => {
+      report.items.forEach((item) => {
+        const insitution_name = item.insitution_name;
+        item.bank_income_sources.forEach((source) => {
+          const nextItem: BankData = {
+            bank_name: insitution_name,
+            total_amount: source.total_amount,
+            transaction_count: source.transaction_count,
+            description: source.income_description,
+          };
+          thisUsersIncome.push(nextItem);
         });
-      }
-    );
+      });
+    });
     setBankIncome(thisUsersIncome);
   }, []);
 
