@@ -26,8 +26,7 @@ const BankIncome = () => {
     const thisUsersIncome = Array<BankData>();
 
     type BankItemType = {
-      // insitution [sic] until next API update
-      insitution_name: string;
+      institution_name: string;
       bank_income_sources: {
         total_amount: number;
         transaction_count: number;
@@ -42,10 +41,10 @@ const BankIncome = () => {
     // TODO: This could probably be done with a clever enough flatmap
     data.bank_income?.forEach((report: BankIncomeType) => {
       report.items.forEach((item) => {
-        const insitution_name = item.insitution_name;
+        const institution_name = item.institution_name;
         item.bank_income_sources.forEach((source) => {
           const nextItem: BankData = {
-            bank_name: insitution_name,
+            bank_name: institution_name,
             total_amount: source.total_amount,
             transaction_count: source.transaction_count,
             description: source.income_description,
