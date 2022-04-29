@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { UserContext } from "./UserContext";
 import LinkLoader, { IncomeType } from "./LinkLoader";
 
 interface BankData {
@@ -11,13 +12,7 @@ interface BankData {
 const BankIncome = () => {
   const [bankIncome, setBankIncome] = useState(Array<BankData>());
   const hardCodedCurrencyCode = "USD";
-
-  const newIncomeWasAdded = async (public_token: string) => {
-    console.log(
-      `Link is done! I have a public token: ${public_token} Which I could use if I wanted to get other information from this bank.`
-    );
-    await getIncome();
-  };
+  const { user } = useContext(UserContext);
 
   const getIncome = useCallback(async () => {
     const response = await fetch("/appServer/getBankIncome");
@@ -37,8 +32,8 @@ const BankIncome = () => {
       items: BankItemType[];
     };
 
-    const thisUsersIncome: Array<BankData> = data.bank_income?.flatMap(
-      (report: BankIncomeType) => {
+    const thisUsersIncome: Array<BankData> =
+      data.bank_income?.flatMap((report: BankIncomeType) => {
         return report.items.flatMap((item) => {
           const institution_name = item.institution_name;
           const income_sources: Array<BankData> = item.bank_income_sources.map(
@@ -51,15 +46,14 @@ const BankIncome = () => {
           );
           return income_sources;
         });
-      }
-    );
+      }) || [];
 
     setBankIncome(thisUsersIncome);
   }, []);
 
   useEffect(() => {
     getIncome();
-  }, [getIncome]);
+  }, [getIncome, user.incomeConnected, user.incomeUpdateTime]);
 
   return (
     <div>
@@ -69,7 +63,6 @@ const BankIncome = () => {
           buttonText={"Add bank income"}
           income={true}
           incomeType={IncomeType.Bank}
-          successCallback={newIncomeWasAdded}
         ></LinkLoader>
       </p>
       {bankIncome.length === 0 ? (

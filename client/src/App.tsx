@@ -1,7 +1,17 @@
+import { useState } from "react";
+
 import "./App.css";
+import { UserContext, PlaidConnectStatus } from "./components/UserContext";
 import UserStatus from "./components/UserStatus";
 
 function App() {
+  const [user, setUser] = useState({
+    userName: "Default User",
+    incomeConnected: PlaidConnectStatus.Unknown,
+    incomeUpdateTime: Date.now(),
+    liabilitiesConnected: PlaidConnectStatus.Unknown,
+  });
+
   return (
     <div className="App">
       <header className="App-header">
@@ -11,8 +21,9 @@ function App() {
         </div>
         <h3>Financing</h3>
         <p>Find out if you qualify for financing for a pre-owned hoverboard!</p>
-        <UserStatus />
-        <UserStatus income={true} />
+        <UserContext.Provider value={{ user, setUser }}>
+          <UserStatus />
+        </UserContext.Provider>
       </header>
     </div>
   );

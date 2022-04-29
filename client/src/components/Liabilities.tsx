@@ -154,7 +154,11 @@ const normalizeLiabilityData = (data: any) => {
       return newStudent;
     }
   );
-  return [...creditLiabilities, ...mortgageLiabilities, ...studentLiabilities];
+  return [
+    ...(creditLiabilities || []),
+    ...(mortgageLiabilities || []),
+    ...(studentLiabilities || []),
+  ];
 };
 
 export default Liabilities;

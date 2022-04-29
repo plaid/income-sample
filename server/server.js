@@ -89,17 +89,16 @@ const getLazyUserID = async function () {
 // institution
 app.get("/appServer/getUserInfo", async (req, res, next) => {
   try {
-    if (req.query.income) {
-      const income_status = userRecord[FIELD_INCOME_CONNECTED];
-      return income_status != null && income_status === true
-        ? res.json({ status: true })
-        : res.json({ status: false });
-    } else {
-      const user_token = userRecord[FIELD_ACCESS_TOKEN];
-      return user_token != null && user_token !== ""
-        ? res.json({ status: true })
-        : res.json({ status: false });
-    }
+    const income_status =
+      userRecord[FIELD_INCOME_CONNECTED] != null &&
+      userRecord[FIELD_INCOME_CONNECTED] !== false;
+    const liability_status =
+      userRecord[FIELD_ACCESS_TOKEN] != null &&
+      userRecord[FIELD_ACCESS_TOKEN] !== "";
+    res.json({
+      liability_status: liability_status,
+      income_status: income_status,
+    });
   } catch (error) {
     next(error);
   }

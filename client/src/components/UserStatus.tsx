@@ -1,105 +1,78 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import BankIncome from "./BankIncome";
 import PayrollIncome from "./PayrollIncome";
 import Liabilities from "./Liabilities";
 import LinkLoader from "./LinkLoader";
-
-enum PlaidConnectStatus {
-  Unknown = "unknown",
-  Connected = "connected",
-  NotConnected = "notConnected",
-}
-
-const UserStatus = (props: { income: boolean }) => {
-  const [connected, setConnected] = useState(PlaidConnectStatus.Unknown);
+import { UserContext, PlaidConnectStatus } from "./UserContext";
+const UserStatus = () => {
+  const { user, setUser } = useContext(UserContext);
 
   const getInfo = useCallback(async () => {
-    const url = `/appServer/getUserInfo${props.income ? "?income=true" : ""}`;
+    const url = "/appServer/getUserInfo";
     const response = await fetch(url);
     const data = await response.json();
+    console.log(`Here's your user data`);
     console.log(data);
-    if (data["status"]) {
-      setConnected(PlaidConnectStatus.Connected);
-    } else {
-      setConnected(PlaidConnectStatus.NotConnected);
-    }
-    return data;
-  }, [props.income]);
+    const liabilityStatus = data["liability_status"]
+      ? PlaidConnectStatus.Connected
+      : PlaidConnectStatus.NotConnected;
+    const incomeStatus = data["income_status"]
+      ? PlaidConnectStatus.Connected
+      : PlaidConnectStatus.NotConnected;
 
-  const linkFinished = async (public_token: String) => {
-    console.log("Here's your public token", public_token);
-    if (public_token != null && public_token !== "") {
-      if (props.income) {
-        await reportThatIncomeWasGood();
-      } else {
-        await exchangeToken(public_token);
-      }
-    }
-    await getInfo();
-  };
-
-  const reportThatIncomeWasGood = async () => {
-    const response = await fetch("/appServer/incomeWasSuccessful", {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-    });
-    console.log(response);
-  };
-
-  const exchangeToken = async (public_token: String) => {
-    const response = await fetch("/appServer/swapPublicToken", {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify({
-        public_token: public_token,
-      }),
-    });
-    console.log(response);
-  };
+    setUser(
+      Object.assign({}, user, {
+        incomeConnected: incomeStatus,
+        liabilitiesConnected: liabilityStatus,
+      })
+    );
+  }, [setUser, user]);
 
   useEffect(() => {
-    if (connected === PlaidConnectStatus.Unknown) {
+    console.log(`Here's your user ${JSON.stringify(user)}`);
+    if (
+      user.incomeConnected === PlaidConnectStatus.Unknown ||
+      user.liabilitiesConnected === PlaidConnectStatus.Unknown
+    ) {
       getInfo();
     }
-  }, [connected, getInfo]);
+  }, [user, getInfo]);
 
   return (
     <div id="userStatusDiv">
-      {connected === PlaidConnectStatus.Unknown ? (
+      {user.liabilitiesConnected === PlaidConnectStatus.Unknown ? (
+        <p>Getting connection status</p>
+      ) : user.liabilitiesConnected === PlaidConnectStatus.Connected ? (
         <>
-          <p>Getting connection status</p>
+          <Liabilities />
         </>
-      ) : connected === PlaidConnectStatus.Connected ? (
-        <div>
-          {props.income ? (
-            <>
-              <PayrollIncome /> <BankIncome />
-            </>
-          ) : (
-            <Liabilities />
-          )}
-        </div>
       ) : (
         <>
-          <p>
-            Connect to your bank to load up
-            {props.income
-              ? " your first source of income"
-              : " your current loans"}
-          </p>
+          <p>Tell us a little about your current loans</p>
+          <LinkLoader
+            buttonText={"Link an account"}
+            income={false}
+          ></LinkLoader>
+        </>
+      )}
+
+      {user.incomeConnected === PlaidConnectStatus.Unknown ? (
+        <p>Getting income status</p>
+      ) : user.incomeConnected === PlaidConnectStatus.Connected ? (
+        <>
+          <PayrollIncome /> <BankIncome />
+        </>
+      ) : (
+        <>
+          <p>Tell us about your sources of income!</p>
           <LinkLoader
             buttonText={"Link an account!"}
-            successCallback={linkFinished}
-            income={props.income}
+            income={true}
           ></LinkLoader>
         </>
       )}
     </div>
   );
-};
-
-UserStatus.defaultProps = {
-  income: false,
 };
 
 export default UserStatus;

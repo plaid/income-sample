@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { UserContext } from "./UserContext";
 import LinkLoader, { IncomeType } from "./LinkLoader";
 
 interface PayrollData {
@@ -13,13 +14,7 @@ interface PayrollData {
 const PayrollIncome = () => {
   const [payrollIncome, setPayrollIncome] = useState(Array<PayrollData>());
   const hardCodedCurrencyCode = "USD";
-
-  const newIncomeWasAdded = async (public_token: string) => {
-    console.log(
-      `Link is done! I have a public token: ${public_token} But I don't really need it here.`
-    );
-    await Promise.all([getIncome]);
-  };
+  const { user } = useContext(UserContext);
 
   const getIncome = useCallback(async () => {
     const response = await fetch("/appServer/getPayrollIncome");
@@ -50,7 +45,7 @@ const PayrollIncome = () => {
 
   useEffect(() => {
     getIncome();
-  }, [getIncome]);
+  }, [getIncome, user.incomeConnected, user.incomeUpdateTime]);
 
   return (
     <div>
@@ -60,7 +55,6 @@ const PayrollIncome = () => {
           buttonText={"Add more income"}
           income={true}
           incomeType={IncomeType.Payroll}
-          successCallback={newIncomeWasAdded}
         ></LinkLoader>
       </p>
       <table
