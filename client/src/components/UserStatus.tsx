@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect } from "react";
 import BankIncome from "./BankIncome";
 import PayrollIncome from "./PayrollIncome";
 import Liabilities from "./Liabilities";
-import LinkLoader from "./LinkLoader";
+import LinkLoader, { IncomeType } from "./LinkLoader";
 import { UserContext, PlaidConnectStatus } from "./UserContext";
 const UserStatus = () => {
   const { user, setUser } = useContext(UserContext);
@@ -66,8 +66,14 @@ const UserStatus = () => {
         <>
           <p>Tell us about your sources of income!</p>
           <LinkLoader
-            buttonText={"Link an account!"}
+            buttonText={"Use payroll provider"}
             income={true}
+            incomeType={IncomeType.Payroll}
+          ></LinkLoader>
+          <LinkLoader
+            buttonText={"Connect to my bank"}
+            income={true}
+            incomeType={IncomeType.Bank}
           ></LinkLoader>
         </>
       )}
