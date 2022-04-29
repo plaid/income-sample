@@ -23,7 +23,6 @@ const BankIncome = () => {
     const response = await fetch("/appServer/getBankIncome");
     const data = await response.json();
     console.log("Bank Income: ", data);
-    const thisUsersIncome = Array<BankData>();
 
     type BankItemType = {
       institution_name: string;
@@ -38,21 +37,23 @@ const BankIncome = () => {
       items: BankItemType[];
     };
 
-    // TODO: This could probably be done with a clever enough flatmap
-    data.bank_income?.forEach((report: BankIncomeType) => {
-      report.items.forEach((item) => {
-        const institution_name = item.institution_name;
-        item.bank_income_sources.forEach((source) => {
-          const nextItem: BankData = {
-            bank_name: institution_name,
-            total_amount: source.total_amount,
-            transaction_count: source.transaction_count,
-            description: source.income_description,
-          };
-          thisUsersIncome.push(nextItem);
+    const thisUsersIncome: Array<BankData> = data.bank_income?.flatMap(
+      (report: BankIncomeType) => {
+        return report.items.flatMap((item) => {
+          const institution_name = item.institution_name;
+          const income_sources: Array<BankData> = item.bank_income_sources.map(
+            (source) => ({
+              bank_name: institution_name,
+              total_amount: source.total_amount,
+              transaction_count: source.transaction_count,
+              description: source.income_description,
+            })
+          );
+          return income_sources;
         });
-      });
-    });
+      }
+    );
+
     setBankIncome(thisUsersIncome);
   }, []);
 
