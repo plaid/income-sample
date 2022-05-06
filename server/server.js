@@ -48,7 +48,7 @@ const getUserRecord = async function () {
     console.log(`Retrieved userData ${userData}`);
     return userDataObj;
   } catch (error) {
-    // Might happen first time, since file doesn't exist
+    // Might happen first time, if file doesn't exist
     console.log("Got an error", error);
     return null;
   }
@@ -59,6 +59,12 @@ let userRecord;
   userRecord = await getUserRecord();
 })();
 
+/**
+ * Updates the user record in memory and writes it to a file. In a real
+ * application, you'd be writing to a database.
+ * @param {string} key
+ * @param {string | number} val
+ */
 const updateUserRecord = async function (key, val) {
   userRecord[key] = val;
   try {
@@ -73,6 +79,11 @@ const updateUserRecord = async function (key, val) {
   }
 };
 
+/**
+ * Returns the userID associated with this user, or lazily instantiates one.
+ * In a real application, this would be your signed-in user's ID.
+ * @returns string randomUserId
+ */
 const getLazyUserID = async function () {
   if (userRecord.userId != null && userRecord.userId !== "") {
     return userRecord.userId;
@@ -84,8 +95,10 @@ const getLazyUserID = async function () {
   }
 };
 
-// Checks whether or not the user has an access token for a financial
-// institution
+/**
+ * Checks whether or not a user has granted access to liability info and
+ * income info.
+ */
 app.get("/appServer/getUserInfo", async (req, res, next) => {
   try {
     const income_status =
@@ -112,6 +125,10 @@ const basicLinkTokenObject = {
   webhook: "https://www.example.com/webhook",
 };
 
+/**
+ * Generates a link token to be used by the client. Depending on the req.body,
+ * this will either be a link token used for income, or one used for liabilities
+ */
 app.post("/appServer/generateLinkToken", async (req, res, next) => {
   try {
     let response;
@@ -150,6 +167,10 @@ app.post("/appServer/generateLinkToken", async (req, res, next) => {
   }
 });
 
+/**
+ * Swap the public token for an access token, so we can access liability info
+ * in the future
+ */
 app.post("/appServer/swapPublicToken", async (req, res, next) => {
   try {
     const response = await plaidClient.itemPublicTokenExchange({
@@ -163,6 +184,9 @@ app.post("/appServer/swapPublicToken", async (req, res, next) => {
   }
 });
 
+/**
+ * Just note that we've successfully connected to at least one source of income.
+ */
 app.post("/appServer/incomeWasSuccessful", async (req, res, next) => {
   try {
     updateUserRecord(FIELD_INCOME_CONNECTED, true);
@@ -172,6 +196,9 @@ app.post("/appServer/incomeWasSuccessful", async (req, res, next) => {
   }
 });
 
+/**
+ * Grabs liability info for the user and return it as a big ol' JSON object
+ */
 app.get("/appServer/fetchLiabilities", async (req, res, next) => {
   try {
     const response = await plaidClient.liabilitiesGet({
@@ -183,11 +210,18 @@ app.get("/appServer/fetchLiabilities", async (req, res, next) => {
   }
 });
 
-// If you wanted to do this when you create a new user, that would be a
-// perfectly acceptable solution, too.
+/**
+ * Returns the user token if one exists, or calls the /user/create endpoint
+ * to generate a user token and then return it.
+ *
+ * In this application, we call this on demand. If you wanted to create this
+ * user token as soon as a user signs up for an account, that would be a
+ * perfectly reasonable solution, as well.
+ *
+ * @returns string userToken
+ */
 const fetchOrCreateUserToken = async () => {
   const userToken = userRecord[FIELD_USER_TOKEN];
-  console.log(`Trying to fetch local user token. Got ${userToken}`);
 
   if (userToken == null || userToken === "") {
     // We're gonna need to generate one!
@@ -198,7 +232,7 @@ const fetchOrCreateUserToken = async () => {
     });
     const newUserToken = response.data.user_token;
     console.log(`New user token is  ${newUserToken}`);
-    // We'll save this because this only needs to be done once per user
+    // We'll save this because this can only be done once per user
     updateUserRecord(FIELD_USER_TOKEN, newUserToken);
     return newUserToken;
   } else {
@@ -206,18 +240,24 @@ const fetchOrCreateUserToken = async () => {
   }
 };
 
+/**
+ * Return payroll income for the user, either downloaded from their payroll
+ * provider, or scanned in from documents
+ */
 app.get("/appServer/getPayrollIncome", async (req, res, next) => {
   try {
     const response = await plaidClient.creditPayrollIncomeGet({
       user_token: userRecord[FIELD_USER_TOKEN],
     });
-
     res.json(response.data);
   } catch (error) {
     next(error);
   }
 });
 
+/**
+ * Return income for the user, as inferred from their bank transactions.
+ */
 app.get("/appServer/getBankIncome", async (req, res, next) => {
   try {
     const response = await plaidClient.creditBankIncomeGet({
@@ -226,7 +266,6 @@ app.get("/appServer/getBankIncome", async (req, res, next) => {
         count: 3,
       },
     });
-
     res.json(response.data);
   } catch (error) {
     next(error);
