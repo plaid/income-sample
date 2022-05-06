@@ -73,10 +73,9 @@ const BankIncome = () => {
           ></LinkLoader>
         </p>
         {bankIncome.length === 0 ? (
-          <p>
-            Click the "Add bank income" button to add any recurring income that
-            might regularly appear in your bank account
-          </p>
+          <Box fontSize="sm">
+            Identify income by locating recurring deposits in your bank account.
+          </Box>
         ) : (
           <Flex>
             {bankIncome.map((e: BankData, idx) => (

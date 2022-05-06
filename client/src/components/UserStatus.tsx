@@ -4,7 +4,7 @@ import PayrollIncome from "./PayrollIncome";
 import Liabilities from "./Liabilities";
 import LinkLoader, { IncomeType } from "./LinkLoader";
 import { UserContext, PlaidConnectStatus } from "./UserContext";
-import { Box, Flex, Heading, Spacer, VStack } from "@chakra-ui/layout";
+import { Box, Flex, Heading, HStack, Spacer, VStack } from "@chakra-ui/layout";
 import { Text } from "@chakra-ui/react";
 const UserStatus = () => {
   const { user, setUser } = useContext(UserContext);
@@ -74,16 +74,18 @@ const UserStatus = () => {
             Sources of Income
           </Heading>
           <p>Tell us about your sources of income!</p>
-          <LinkLoader
-            buttonText={"Use payroll provider"}
-            income={true}
-            incomeType={IncomeType.Payroll}
-          ></LinkLoader>
-          <LinkLoader
-            buttonText={"Connect to my bank"}
-            income={true}
-            incomeType={IncomeType.Bank}
-          ></LinkLoader>
+          <HStack>
+            <LinkLoader
+              buttonText={"Use payroll provider"}
+              income={true}
+              incomeType={IncomeType.Payroll}
+            ></LinkLoader>
+            <LinkLoader
+              buttonText={"Connect to my bank"}
+              income={true}
+              incomeType={IncomeType.Bank}
+            ></LinkLoader>
+          </HStack>
         </>
       )}
     </VStack>

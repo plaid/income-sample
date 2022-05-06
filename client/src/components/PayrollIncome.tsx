@@ -63,12 +63,7 @@ const PayrollIncome = () => {
             incomeType={IncomeType.Payroll}
           ></LinkLoader>
         </p>
-        {payrollIncome.length === 0 ? (
-          <p>
-            Click the "Add payroll provider" button to import income from your
-            employer (or scanned documents)
-          </p>
-        ) : (
+        {payrollIncome.length !== 0 && (
           <Flex>
             {payrollIncome.map((payroll: PayrollData, idx) => (
               <Box
