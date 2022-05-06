@@ -29,13 +29,13 @@ Would you like to be the first to own a pre-owned hoverboard? Well, you're in lu
 
 When you first start up the app, you'll be prompted to connect to a bank to load up your liabilities, and connect to your Payroll provider (or bank) to load up your sources of income! We provide you with the opportunity to add additional sources of income as well.
 
-When asked to connect to a bank while in Sandbox mode, supply the credentials `user_good` and `pass_good` and the MFA code of `1234` if you're asked for it.
+When asked to connect to a bank while in Sandbox mode, supply the credentials `user_good` and `pass_good` and the MFA code of `1234` if you're asked for it. In Sandbox mode, the only "income" that exists is the interest income on the Plaid Savings account. Payroll income is a little more exciting.
 
 ### TODOs
 
-- Add a little more styling, maybe?
 - Test this in a development environment against actual data.
 - Add error messaging somewhere in the app for if people forget to fill out the .env or fill it out incorrectly
+- Clean up my Chakra UI components. I suspect things are messier than they should be.
 - Make sure we don't flip out if you try to use Document Income in a non-Sandbox environment, before the data is ready.
 - Add in the payroll income precheck
 - See what happens if you provide existing access tokens when creating a link token for bank income
