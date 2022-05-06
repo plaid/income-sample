@@ -1,16 +1,14 @@
 # Plaid Income Sample
 
-Or "Todd tries to build a react app from scratch"
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). There's probably some extra cruft I need to get rid of before I can distribute it. But it's a good start!
+Or "Todd tries to build a react app from scratch".
 
 ## Running the server
 
 To get the server running...
 
 - cd into the server directory and run `npm install`
-- Copy over `.env_orig.env` to `.env`
-- Copy over `user_data_orig.json` to `user_data.json`
+- Copy over `.env.template` to `.env`
+- Copy over `user_data.json.template` to `user_data.json`
 - Add your client ID and secret to the .env file you just created
 - Run `npm start` (or `npm run watch` if you want to make changes to the file)
 
@@ -29,7 +27,7 @@ Go ahead and open up the client page in the browser if it doesn't open automatic
 
 Would you like to be the first to own a pre-owned hoverboard? Well, you're in luck, Todd's Pre-Owned Hoverboards has financing available!
 
-When you first start up the app, you'll be prompted to both connect to a bank to load up your liabilities, but also connect to your Payroll provider to load up your sources of income! (Once you've done that, we then provide you with the opportunity to add additional sources of income -- either from payroll or from the bank)
+When you first start up the app, you'll be prompted to connect to a bank to load up your liabilities, and connect to your Payroll provider (or bank) to load up your sources of income! We provide you with the opportunity to add additional sources of income -- either from payroll or from the bank.
 
 When asked to connect to a bank while in Sandbox mode, supply the credentials `user_good` and `pass_good` and the MFA code of `1234` if you're asked for it.
 

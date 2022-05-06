@@ -36,8 +36,7 @@ const plaidConfig = new Configuration({
 const plaidClient = new PlaidApi(plaidConfig);
 
 // Instead of using a database to store our user token, we're writing it
-// to a flat file. Unlike our session storage solution, this survives restarting
-// the server. Convenient for demo purposes, a terrible idea for a production
+// to a flat file. Convenient for demo purposes, a terrible idea for a production
 // app.
 
 const getUserRecord = async function () {
@@ -184,6 +183,8 @@ app.get("/appServer/fetchLiabilities", async (req, res, next) => {
   }
 });
 
+// If you wanted to do this when you create a new user, that would be a
+// perfectly acceptable solution, too.
 const fetchOrCreateUserToken = async () => {
   const userToken = userRecord[FIELD_USER_TOKEN];
   console.log(`Trying to fetch local user token. Got ${userToken}`);
