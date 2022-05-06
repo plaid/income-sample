@@ -40,7 +40,7 @@ const Liabilities = () => {
 
   return (
     <div>
-      <h4>Your current loans:</h4>
+      <h4>Your current loans</h4>
       <table cellPadding={5}>
         <thead>
           <tr>

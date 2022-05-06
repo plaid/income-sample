@@ -49,60 +49,62 @@ const PayrollIncome = () => {
 
   return (
     <div>
-      <h4>Payroll income:</h4>
+      <h4>Payroll income</h4>
       <p>
         <LinkLoader
-          buttonText={"Add more income"}
+          buttonText={"Add a payroll provider"}
           income={true}
           incomeType={IncomeType.Payroll}
         ></LinkLoader>
       </p>
-      <table
-        cellPadding={5}
-        style={{ marginLeft: "auto", marginRight: "auto" }}
-      >
-        <thead>
-          <tr>
-            <th align="left" style={{ maxWidth: "350px" }}>
-              Employer
-            </th>
-            <th align="right">Gross YTD</th>
-            <th align="right">Net YTD</th>
-            <th align="right">You get paid...</th>
-            <th>...on</th>
-            <th>Downloaded?</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payrollIncome.map((payroll: PayrollData, idx) => (
-            <tr key={idx}>
-              <td align="left" style={{ maxWidth: "350px" }}>
-                {payroll.employer}
-              </td>
-              <td align="right">
-                {payroll.ytd_gross.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: hardCodedCurrencyCode,
-                })}
-              </td>
-              <td align="right">
-                {payroll.ytd_net.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: hardCodedCurrencyCode,
-                })}
-              </td>
-              <td align="right">
-                {payroll.pay_period_gross.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: hardCodedCurrencyCode,
-                })}
-              </td>
-              <td>{payroll.pay_period_frequency}</td>
-              <td>{payroll.downloaded_from_provider ? "✅" : ""}</td>
+      {payrollIncome.length > 0 && (
+        <table
+          cellPadding={5}
+          style={{ marginLeft: "auto", marginRight: "auto" }}
+        >
+          <thead>
+            <tr>
+              <th align="left" style={{ maxWidth: "350px" }}>
+                Employer
+              </th>
+              <th align="right">Gross YTD</th>
+              <th align="right">Net YTD</th>
+              <th align="right">You get paid...</th>
+              <th>...on</th>
+              <th>Downloaded?</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {payrollIncome.map((payroll: PayrollData, idx) => (
+              <tr key={idx}>
+                <td align="left" style={{ maxWidth: "350px" }}>
+                  {payroll.employer}
+                </td>
+                <td align="right">
+                  {payroll.ytd_gross.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: hardCodedCurrencyCode,
+                  })}
+                </td>
+                <td align="right">
+                  {payroll.ytd_net.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: hardCodedCurrencyCode,
+                  })}
+                </td>
+                <td align="right">
+                  {payroll.pay_period_gross.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: hardCodedCurrencyCode,
+                  })}
+                </td>
+                <td>{payroll.pay_period_frequency}</td>
+                <td>{payroll.downloaded_from_provider ? "✅" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
