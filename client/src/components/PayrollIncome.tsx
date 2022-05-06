@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { UserContext } from "./UserContext";
 import LinkLoader, { IncomeType } from "./LinkLoader";
+import { Badge, Box, Flex, Heading, Spacer, VStack } from "@chakra-ui/layout";
 
 interface PayrollData {
   employer: string;
@@ -9,6 +10,7 @@ interface PayrollData {
   pay_period_gross: number;
   pay_period_frequency: string;
   downloaded_from_provider: boolean;
+  payroll_id: string;
 }
 
 const PayrollIncome = () => {
@@ -37,6 +39,7 @@ const PayrollIncome = () => {
           pay_period_gross: pay_stub.pay_period_details.gross_earnings,
           pay_period_frequency: pay_stub.pay_period_details.pay_frequency,
           downloaded_from_provider: e.account_id !== null,
+          payroll_id: pay_stub.document_id,
         };
       }
     );
@@ -48,64 +51,73 @@ const PayrollIncome = () => {
   }, [getIncome, user.incomeConnected, user.incomeUpdateTime]);
 
   return (
-    <div>
-      <h4>Payroll income</h4>
-      <p>
-        <LinkLoader
-          buttonText={"Add a payroll provider"}
-          income={true}
-          incomeType={IncomeType.Payroll}
-        ></LinkLoader>
-      </p>
-      {payrollIncome.length > 0 && (
-        <table
-          cellPadding={5}
-          style={{ marginLeft: "auto", marginRight: "auto" }}
-        >
-          <thead>
-            <tr>
-              <th align="left" style={{ maxWidth: "350px" }}>
-                Employer
-              </th>
-              <th align="right">Gross YTD</th>
-              <th align="right">Net YTD</th>
-              <th align="right">You get paid...</th>
-              <th>...on</th>
-              <th>Downloaded?</th>
-            </tr>
-          </thead>
-          <tbody>
+    <Box minW="40vw">
+      <VStack>
+        <Heading as="h4" size="md">
+          Payroll income
+        </Heading>
+        <p>
+          <LinkLoader
+            buttonText={"Add a payroll provider"}
+            income={true}
+            incomeType={IncomeType.Payroll}
+          ></LinkLoader>
+        </p>
+        {payrollIncome.length === 0 ? (
+          <p>
+            Click the "Add payroll provider" button to import income from your
+            employer (or scanned documents)
+          </p>
+        ) : (
+          <Flex>
             {payrollIncome.map((payroll: PayrollData, idx) => (
-              <tr key={idx}>
-                <td align="left" style={{ maxWidth: "350px" }}>
+              <Box
+                key={payroll.payroll_id}
+                maxW="xs"
+                borderWidth="2px"
+                borderRadius="lg"
+                overflow="hidden"
+                mx="2"
+                px="3"
+              >
+                <Box mt="1" fontWeight="semibold" as="h4" isTruncated>
                   {payroll.employer}
-                </td>
-                <td align="right">
+                </Box>
+                <Box fontSize="sm">
+                  YTD:{" "}
                   {payroll.ytd_gross.toLocaleString("en-US", {
                     style: "currency",
                     currency: hardCodedCurrencyCode,
                   })}
-                </td>
-                <td align="right">
+                </Box>
+                <Box fontSize="sm">
+                  Net:{" "}
                   {payroll.ytd_net.toLocaleString("en-US", {
                     style: "currency",
                     currency: hardCodedCurrencyCode,
                   })}
-                </td>
-                <td align="right">
+                </Box>
+                <Box fontSize="sm">
+                  Salary:{" "}
                   {payroll.pay_period_gross.toLocaleString("en-US", {
                     style: "currency",
                     currency: hardCodedCurrencyCode,
-                  })}
-                </td>
-                <td>{payroll.pay_period_frequency}</td>
-                <td>{payroll.downloaded_from_provider ? "✅" : ""}</td>
-              </tr>
+                  })}{" "}
+                  <Box as="span" fontSize="x-small">
+                    {payroll.pay_period_frequency}
+                  </Box>
+                </Box>
+                {payroll.downloaded_from_provider ? (
+                  <Badge colorScheme="green">Downloaded</Badge>
+                ) : (
+                  <Badge colorScheme="yellow">Scanned</Badge>
+                )}
+              </Box>
             ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+          </Flex>
+        )}
+      </VStack>
+    </Box>
   );
 };
 

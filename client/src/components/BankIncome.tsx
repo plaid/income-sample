@@ -1,12 +1,14 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { UserContext } from "./UserContext";
 import LinkLoader, { IncomeType } from "./LinkLoader";
+import { Box, Flex, Heading, VStack } from "@chakra-ui/layout";
 
 interface BankData {
-  bank_name: String;
+  bank_name: string;
   total_amount: number;
   transaction_count: number;
   description: number;
+  income_id: string;
 }
 
 const BankIncome = () => {
@@ -25,6 +27,7 @@ const BankIncome = () => {
         total_amount: number;
         transaction_count: number;
         income_description: number;
+        income_source_id: string;
       }[];
     };
 
@@ -42,6 +45,7 @@ const BankIncome = () => {
               total_amount: source.total_amount,
               transaction_count: source.transaction_count,
               description: source.income_description,
+              income_id: source.income_source_id,
             })
           );
           return income_sources;
@@ -56,54 +60,53 @@ const BankIncome = () => {
   }, [getIncome, user.incomeConnected, user.incomeUpdateTime]);
 
   return (
-    <div>
-      <h4>Bank income</h4>
-      <p>
-        <LinkLoader
-          buttonText={"Add bank income"}
-          income={true}
-          incomeType={IncomeType.Bank}
-        ></LinkLoader>
-      </p>
-      {bankIncome.length === 0 ? (
+    <Box minW="40vw">
+      <VStack>
+        <Heading as="h4" size="md">
+          Bank income
+        </Heading>
         <p>
-          Click the "Add bank income" button to add any recurring income that
-          might regularly appear in your bank account
+          <LinkLoader
+            buttonText={"Add bank income"}
+            income={true}
+            incomeType={IncomeType.Bank}
+          ></LinkLoader>
         </p>
-      ) : (
-        <table
-          cellPadding={5}
-          style={{ marginLeft: "auto", marginRight: "auto" }}
-        >
-          <thead>
-            <tr>
-              <th align="left" style={{ maxWidth: "350px" }}>
-                Institution
-              </th>
-              <th align="left">Income Type</th>
-              <th align="right">Total Amount</th>
-            </tr>
-          </thead>
-          <tbody>
+        {bankIncome.length === 0 ? (
+          <p>
+            Click the "Add bank income" button to add any recurring income that
+            might regularly appear in your bank account
+          </p>
+        ) : (
+          <Flex>
             {bankIncome.map((e: BankData, idx) => (
-              <tr key={idx}>
-                <td align="left" style={{ maxWidth: "350px" }}>
+              <Box
+                key={e.income_id}
+                maxW="md"
+                borderWidth="2px"
+                borderRadius="lg"
+                overflow="hidden"
+                mx="2"
+                px="3"
+              >
+                <Box mt="1" fontWeight="semibold" as="h4" isTruncated>
                   {e.bank_name}
-                </td>
-                <td align="left">{e.description}</td>
-                <td align="right">
+                </Box>
+                <Box fontSize="sm">{e.description}</Box>
+                <Box as="b">
                   {e.total_amount.toLocaleString("en-US", {
                     style: "currency",
                     currency: hardCodedCurrencyCode,
                   })}{" "}
-                  (from {e.transaction_count} txns)
-                </td>
-              </tr>
+                </Box>
+
+                <Box as="span">(from {e.transaction_count} txns)</Box>
+              </Box>
             ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+          </Flex>
+        )}
+      </VStack>
+    </Box>
   );
 };
 

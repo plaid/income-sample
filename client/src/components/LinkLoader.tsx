@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { UserContext, PlaidConnectStatus } from "./UserContext";
 import LaunchLink from "./LinkLauncher";
+import { Button } from "@chakra-ui/button";
 
 export enum IncomeType {
   Bank = "bank",
@@ -83,7 +84,9 @@ const LinkLoader = (props: Props) => {
 
   return (
     <>
-      <button onClick={() => loadAndLaunchLink()}>{props.buttonText}</button>
+      <Button colorScheme="green" onClick={() => loadAndLaunchLink()}>
+        {props.buttonText}
+      </Button>
       <LaunchLink token={linkToken} successCallback={linkSuccess} />
     </>
   );

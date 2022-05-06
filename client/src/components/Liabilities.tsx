@@ -1,3 +1,4 @@
+import { Box, Flex, Heading, VStack } from "@chakra-ui/layout";
 import { useCallback, useEffect, useState } from "react";
 
 enum LiabilityType {
@@ -39,38 +40,38 @@ const Liabilities = () => {
   }, [loadUpLiabilities]);
 
   return (
-    <div>
-      <h4>Your current loans</h4>
-      <table cellPadding={5}>
-        <thead>
-          <tr>
-            <th align="left" style={{ maxWidth: "350px" }}>
-              Name
-            </th>
-            <th align="left">Loan type</th>
-            <th align="right">Balance</th>
-            <th align="right">APR</th>
-          </tr>
-        </thead>
-        <tbody>
-          {userLiabilities.map((liability: LiabilityData) => (
-            <tr key={liability.account_id}>
-              <td align="left" style={{ maxWidth: "350px" }}>
-                {liability.name}
-              </td>
-              <td align="left">{liability.type}</td>
-              <td align="right">
-                {liability.amount.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: liability.currencyCode,
-                })}
-              </td>
-              <td align="right">{liability.percentage.toFixed(2)}%</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <VStack>
+      <Heading as="h4" size="md">
+        Your current loans
+      </Heading>
+      <Flex>
+        {userLiabilities.map((liability: LiabilityData) => (
+          <Box
+            key={liability.account_id}
+            maxW="220px"
+            borderWidth="2px"
+            borderRadius="lg"
+            overflow="hidden"
+            mx="2"
+            px="3"
+          >
+            <Box mt="1" as="h4" isTruncated>
+              {liability.name}
+            </Box>
+            <Box fontSize="sm">{liability.type}</Box>
+            <Box fontWeight="semibold">
+              {liability.amount.toLocaleString("en-US", {
+                style: "currency",
+                currency: liability.currencyCode,
+              })}{" "}
+            </Box>
+            <Box fontSize="sm" fontWeight="light">
+              ({liability.percentage.toFixed(2)}% APR)
+            </Box>
+          </Box>
+        ))}
+      </Flex>
+    </VStack>
   );
 };
 
