@@ -77,7 +77,7 @@ const BankIncome = () => {
             Identify income by locating recurring deposits in your bank account.
           </Box>
         ) : (
-          <Flex>
+          <Flex direction={{ base: "column", lg: "row" }} gap={2}>
             {bankIncome.map((e: BankData, idx) => (
               <Box
                 key={e.income_id}

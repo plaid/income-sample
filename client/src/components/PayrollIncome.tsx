@@ -64,7 +64,7 @@ const PayrollIncome = () => {
           ></LinkLoader>
         </p>
         {payrollIncome.length !== 0 && (
-          <Flex>
+          <Flex direction={{ base: "column", lg: "row" }} gap={2}>
             {payrollIncome.map((payroll: PayrollData, idx) => (
               <Box
                 key={payroll.payroll_id}

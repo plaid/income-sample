@@ -41,7 +41,7 @@ const UserStatus = () => {
   }, [user, getInfo]);
 
   return (
-    <VStack mt="6">
+    <VStack mt={3} spacing={6}>
       {user.liabilitiesConnected === PlaidConnectStatus.Unknown ? (
         <Text fontSize="sm">Getting connection status</Text>
       ) : user.liabilitiesConnected === PlaidConnectStatus.Connected ? (
@@ -63,7 +63,7 @@ const UserStatus = () => {
       {user.incomeConnected === PlaidConnectStatus.Unknown ? (
         <Text fontSize="sm">Getting income status</Text>
       ) : user.incomeConnected === PlaidConnectStatus.Connected ? (
-        <Flex p="6">
+        <Flex p="6" direction={{ base: "column", md: "row" }}>
           <PayrollIncome />
           <Spacer />
           <BankIncome />
@@ -74,7 +74,7 @@ const UserStatus = () => {
             Sources of Income
           </Heading>
           <p>Tell us about your sources of income!</p>
-          <HStack>
+          <Flex direction={{ base: "column", md: "row" }} gap={5}>
             <LinkLoader
               buttonText={"Use payroll provider"}
               income={true}
@@ -85,7 +85,7 @@ const UserStatus = () => {
               income={true}
               incomeType={IncomeType.Bank}
             ></LinkLoader>
-          </HStack>
+          </Flex>
         </>
       )}
     </VStack>

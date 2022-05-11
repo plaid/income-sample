@@ -112,3 +112,6 @@ dist
 
 # VS-code specific things 
 .vscode
+
+# A folder I use to keep track of .env and user_data files with actual data in them
+server/.devValues

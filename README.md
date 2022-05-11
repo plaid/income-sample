@@ -34,10 +34,11 @@ When asked to connect to a bank while in Sandbox mode, supply the credentials `u
 ### TODOs
 
 - Test this in a development environment against actual data.
-- Add error messaging somewhere in the app for if people forget to fill out the .env or fill it out incorrectly
 - Clean up my Chakra UI components. I suspect things are messier than they should be.
-- Make sure we don't flip out if you try to use Document Income in a non-Sandbox environment, before the data is ready.
+- Handle things more elegantly if the user_data.json file doesn't exist
 - Add in the payroll income precheck
+- Make the error messaging fancier -- use an Alert component!
+- Make sure we don't flip out if you try to use Document Income in a non-Sandbox environment, before the data is ready.
 - See what happens if you provide existing access tokens when creating a link token for bank income
 - Clean up my camel vs snake vs kebab case inconsistencies
 - Let you know if financing is available so we have a happy ending to our story.
