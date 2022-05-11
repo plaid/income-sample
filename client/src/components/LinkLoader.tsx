@@ -77,9 +77,16 @@ const LinkLoader = (props: Props) => {
       headers: { "Content-type": "application/json" },
       body: messageBody,
     });
-    const data = await response.json();
-    console.log(`Got back link token ${data.link_token}`);
-    return data.link_token;
+    if (response.status === 500) {
+      alert(
+        "We received an error trying to create a link token. Please make sure you've followed all the setup steps in the readme file, and that your account is activated for income verification."
+      );
+    } else {
+      const data = await response.json();
+
+      console.log(`Got back link token ${data.link_token}`);
+      return data.link_token;
+    }
   };
 
   return (
