@@ -81,7 +81,7 @@ const BankIncome = () => {
             {bankIncome.map((e: BankData, idx) => (
               <Box
                 key={e.income_id}
-                maxW="md"
+                maxW={205}
                 borderWidth="2px"
                 borderRadius="lg"
                 overflow="hidden"
@@ -91,7 +91,9 @@ const BankIncome = () => {
                 <Box mt="1" fontWeight="semibold" as="h4" isTruncated>
                   {e.bank_name}
                 </Box>
-                <Box fontSize="sm">{e.description}</Box>
+                <Box fontSize="sm" isTruncated>
+                  {e.description}
+                </Box>
                 <Box as="b">
                   {e.total_amount.toLocaleString("en-US", {
                     style: "currency",
