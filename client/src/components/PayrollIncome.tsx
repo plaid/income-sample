@@ -23,7 +23,11 @@ const PayrollIncome = () => {
     const data = await response.json();
     console.log("Payroll Income: ", data);
     const allPayrollIncome = data.items
-      .reduce((prev: any, curr: any) => prev.concat(curr.payroll_income), [])
+      .reduce((prev: any, curr: any) => {
+        return curr.status.processing_status === "PROCESSING_COMPLETE"
+          ? prev.concat(curr.payroll_income)
+          : prev;
+      }, [])
       .filter(
         (e: { pay_stubs: any[] | null }) =>
           e.pay_stubs != null && e.pay_stubs.length > 0
@@ -31,15 +35,18 @@ const PayrollIncome = () => {
 
     const thisUsersIncome: Array<PayrollData> = allPayrollIncome.map(
       (e: { pay_stubs: any[]; account_id?: string }) => {
+        // I'm only looking at our most recent paystub but you may want to look at
+        // several, depending on your use case
         const pay_stub = e.pay_stubs[0];
         return {
-          employer: pay_stub.employer.name,
-          ytd_gross: pay_stub.earnings.total.ytd_amount,
-          ytd_net: pay_stub.net_pay.ytd_amount,
-          pay_period_gross: pay_stub.pay_period_details.gross_earnings,
-          pay_period_frequency: pay_stub.pay_period_details.pay_frequency,
+          employer: pay_stub.employer.name || "Unknown",
+          ytd_gross: pay_stub.earnings.total.ytd_amount || 0,
+          ytd_net: pay_stub.net_pay.ytd_amount || 0,
+          pay_period_gross: pay_stub.pay_period_details.gross_earnings || 0,
+          pay_period_frequency:
+            pay_stub.pay_period_details.pay_frequency || "Unknown",
           downloaded_from_provider: e.account_id !== null,
-          payroll_id: pay_stub.document_id,
+          payroll_id: pay_stub.document_id || "",
         };
       }
     );
