@@ -2,7 +2,7 @@
 
 Or "Todd tries to build a React app from scratch".
 
-This is a fairly simple application that demonstrates how to make calls against the Plaid Income API.
+This is a fairly simple application using React on the frontend, NodeJS on the backend and a text file as our database which demonstrates how to make calls against the Plaid Income API.
 
 ## Running the server
 
@@ -14,7 +14,7 @@ To get the server running...
 - Add your client ID and secret to the .env file you just created
 - Run `npm start` (or `npm run watch` if you want to make changes to the file)
 
-In lieu of setting up an actual database to keep track of user info, we store everything to a flat JSON-encoded file (the user_data.json file). It's not very scalable, but it survives server restarts, which is nice. If you do want to start "fresh" with a new user, stop the server, re-copy `user_data.json.template` to `user_data.json`, then restart the server.
+In lieu of setting up an actual database to keep track of user info, we store everything to a flat JSON-encoded file (the `user_data.json` file). It's not very scalable, but it survives server restarts, which is nice. If you do want to start "fresh" with a new user, stop the server, re-copy `user_data.json.template` to `user_data.json`, then restart the server.
 
 ## Running the client
 
@@ -35,11 +35,10 @@ When asked to connect to a bank while in Sandbox mode, supply the credentials `u
 
 ### TODOs
 
-- Handle things more elegantly if the user_data.json file doesn't exist
-- Clean up some of the Chakra UI components a bit
 - Add in the payroll income precheck
+- Clean up some of the Chakra UI components a bit
 - Display a more meaningful message for when you have pending document data
+- Try re-using our existing access tokens from Liabilities when creating a link token for bank income
 - Consider showing how you'd use a webhook for document flow
 - Make the error messaging fancier than an alert box
-- See what happens if you provide existing access tokens when creating a link token for bank income
 - Let you know if financing is available so we have a happy ending to our story.
