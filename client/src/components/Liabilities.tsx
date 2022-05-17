@@ -25,7 +25,7 @@ const Liabilities = () => {
 
   const loadUpLiabilities = useCallback(async () => {
     console.log("Fetching Liability Info!");
-    const response = await fetch("/appServer/fetchLiabilities");
+    const response = await fetch("/appServer/fetch_liabilities");
     const data = await response.json();
     console.log(data);
 

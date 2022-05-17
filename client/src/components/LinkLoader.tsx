@@ -14,6 +14,13 @@ interface Props {
   buttonText: string;
 }
 
+/**
+ * Grabs a link token from the server, calls Link, and then either sends the
+ * public token back down to the server, or just reports success back ot the
+ * sever. The behavior of this changes quite a bit depending on whether
+ * or not you're using Plaid Income.
+ */
+
 const LinkLoader = (props: Props) => {
   const [linkToken, setLinkToken] = useState("");
   const { user, setUser } = useContext(UserContext);
@@ -34,7 +41,7 @@ const LinkLoader = (props: Props) => {
   };
 
   const incomeSuccess = async (public_token: String) => {
-    const response = await fetch("/appServer/incomeWasSuccessful", {
+    const response = await fetch("/appServer/income_was_successful", {
       method: "POST",
       headers: { "Content-type": "application/json" },
     });
@@ -48,7 +55,7 @@ const LinkLoader = (props: Props) => {
   };
 
   const accessTokenSuccess = async (public_token: String) => {
-    const response = await fetch("/appServer/swapPublicToken", {
+    const response = await fetch("/appServer/swap_public_token", {
       method: "POST",
       headers: { "Content-type": "application/json" },
       body: JSON.stringify({
@@ -72,7 +79,7 @@ const LinkLoader = (props: Props) => {
       : JSON.stringify({
           income: false,
         });
-    const response = await fetch("/appServer/generateLinkToken", {
+    const response = await fetch("/appServer/generate_link_token", {
       method: "POST",
       headers: { "Content-type": "application/json" },
       body: messageBody,

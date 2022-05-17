@@ -9,9 +9,11 @@ const { v4: uuidv4 } = require("uuid");
 const APP_PORT = process.env.APP_PORT || 8080;
 const USER_DATA_FILE = "user_data.json";
 
+// Fields used for the userRecord object
 const FIELD_ACCESS_TOKEN = "accessToken";
 const FIELD_USER_TOKEN = "incomeUserToken";
 const FIELD_INCOME_CONNECTED = "incomeConnected";
+const FIELD_USER_ID = "userId";
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -39,6 +41,10 @@ const plaidClient = new PlaidApi(plaidConfig);
 // to a flat file. Convenient for demo purposes, a terrible idea for a production
 // app.
 
+/**
+ * Retrieve our user record from our  our flat file
+ * @returns {Object} userDataObject
+ */
 const getUserRecord = async function () {
   try {
     const userData = await fs.readFile(USER_DATA_FILE, {
@@ -54,9 +60,19 @@ const getUserRecord = async function () {
   }
 };
 
+/**
+ * This loads our user record into memory when we first start up
+ */
 let userRecord;
 (async () => {
   userRecord = await getUserRecord();
+  if (userRecord == null) {
+    userRecord = {};
+    userRecord[FIELD_ACCESS_TOKEN] = null;
+    userRecord[FIELD_INCOME_CONNECTED] = false;
+    userRecord[FIELD_USER_TOKEN] = null;
+    userRecord[FIELD_USER_ID] = null;
+  }
 })();
 
 /**
@@ -81,8 +97,8 @@ const updateUserRecord = async function (key, val) {
 
 /**
  * Returns the userID associated with this user, or lazily instantiates one.
- * In a real application, this would be your signed-in user's ID.
- * @returns string randomUserId
+ * In a real application, this would most likely be your signed-in user's ID.
+ * @returns {string} randomUserId
  */
 const getLazyUserID = async function () {
   if (userRecord.userId != null && userRecord.userId !== "") {
@@ -90,16 +106,16 @@ const getLazyUserID = async function () {
   } else {
     // Let's lazily instantiate it!
     const randomUserId = "user_" + uuidv4();
-    await updateUserRecord("userId", randomUserId);
+    await updateUserRecord(FIELD_USER_ID, randomUserId);
     return randomUserId;
   }
 };
 
 /**
- * Checks whether or not a user has granted access to liability info and
- * income info.
+ * Checks whether or not a user has granted access to liability info and income
+ * info based on what's been recorded in our userRecord
  */
-app.get("/appServer/getUserInfo", async (req, res, next) => {
+app.get("/appServer/get_user_info", async (req, res, next) => {
   try {
     const income_status =
       userRecord[FIELD_INCOME_CONNECTED] != null &&
@@ -129,7 +145,7 @@ const basicLinkTokenObject = {
  * Generates a link token to be used by the client. Depending on the req.body,
  * this will either be a link token used for income, or one used for liabilities
  */
-app.post("/appServer/generateLinkToken", async (req, res, next) => {
+app.post("/appServer/generate_link_token", async (req, res, next) => {
   try {
     let response;
     if (req.body.income === true) {
@@ -171,7 +187,7 @@ app.post("/appServer/generateLinkToken", async (req, res, next) => {
  * Swap the public token for an access token, so we can access liability info
  * in the future
  */
-app.post("/appServer/swapPublicToken", async (req, res, next) => {
+app.post("/appServer/swap_public_token", async (req, res, next) => {
   try {
     const response = await plaidClient.itemPublicTokenExchange({
       public_token: req.body.public_token,
@@ -187,7 +203,7 @@ app.post("/appServer/swapPublicToken", async (req, res, next) => {
 /**
  * Just note that we've successfully connected to at least one source of income.
  */
-app.post("/appServer/incomeWasSuccessful", async (req, res, next) => {
+app.post("/appServer/income_was_successful", async (req, res, next) => {
   try {
     updateUserRecord(FIELD_INCOME_CONNECTED, true);
     res.json({ status: true });
@@ -199,7 +215,7 @@ app.post("/appServer/incomeWasSuccessful", async (req, res, next) => {
 /**
  * Grabs liability info for the user and return it as a big ol' JSON object
  */
-app.get("/appServer/fetchLiabilities", async (req, res, next) => {
+app.get("/appServer/fetch_liabilities", async (req, res, next) => {
   try {
     const response = await plaidClient.liabilitiesGet({
       access_token: userRecord[FIELD_ACCESS_TOKEN],
@@ -218,7 +234,7 @@ app.get("/appServer/fetchLiabilities", async (req, res, next) => {
  * user token as soon as a user signs up for an account, that would be a
  * perfectly reasonable solution, as well.
  *
- * @returns string userToken
+ * @returns {string} userToken The user token
  */
 const fetchOrCreateUserToken = async () => {
   const userToken = userRecord[FIELD_USER_TOKEN];
@@ -244,7 +260,7 @@ const fetchOrCreateUserToken = async () => {
  * Return payroll income for the user, either downloaded from their payroll
  * provider, or scanned in from documents
  */
-app.get("/appServer/getPayrollIncome", async (req, res, next) => {
+app.get("/appServer/get_payroll_income", async (req, res, next) => {
   try {
     const response = await plaidClient.creditPayrollIncomeGet({
       user_token: userRecord[FIELD_USER_TOKEN],
@@ -258,7 +274,7 @@ app.get("/appServer/getPayrollIncome", async (req, res, next) => {
 /**
  * Return income for the user, as inferred from their bank transactions.
  */
-app.get("/appServer/getBankIncome", async (req, res, next) => {
+app.get("/appServer/get_bank_income", async (req, res, next) => {
   try {
     const response = await plaidClient.creditBankIncomeGet({
       user_token: userRecord[FIELD_USER_TOKEN],

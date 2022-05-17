@@ -11,13 +11,17 @@ interface BankData {
   income_id: string;
 }
 
+/**
+ * Retrieves any income data form the user's bank and displays it in a
+ * somewhat user-friendly format
+ */
 const BankIncome = () => {
   const [bankIncome, setBankIncome] = useState(Array<BankData>());
   const hardCodedCurrencyCode = "USD";
   const { user } = useContext(UserContext);
 
   const getIncome = useCallback(async () => {
-    const response = await fetch("/appServer/getBankIncome");
+    const response = await fetch("/appServer/get_bank_income");
     const data = await response.json();
     console.log("Bank Income: ", data);
 
@@ -35,6 +39,9 @@ const BankIncome = () => {
       items: BankItemType[];
     };
 
+    // `bank_income` is an array of objects, each of which contains an array of
+    // `items`, which are objects that, in turn, contains an array of
+    // `bank_income_sources`.
     const thisUsersIncome: Array<BankData> =
       data.bank_income?.flatMap((report: BankIncomeType) => {
         return report.items.flatMap((item) => {

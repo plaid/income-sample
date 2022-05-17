@@ -4,13 +4,20 @@ import PayrollIncome from "./PayrollIncome";
 import Liabilities from "./Liabilities";
 import LinkLoader, { IncomeType } from "./LinkLoader";
 import { UserContext, PlaidConnectStatus } from "./UserContext";
-import { Box, Flex, Heading, HStack, Spacer, VStack } from "@chakra-ui/layout";
+import { Flex, Heading, Spacer, VStack } from "@chakra-ui/layout";
 import { Text } from "@chakra-ui/react";
+
+/**
+ * This object queries the server to find out if the user has connected their
+ * bank or payroll provider with Plaid for either the Liabilities or Income
+ * product and then displays either the proper component or a "Connect your
+ * bank" kind of button
+ */
 const UserStatus = () => {
   const { user, setUser } = useContext(UserContext);
 
   const getInfo = useCallback(async () => {
-    const url = "/appServer/getUserInfo";
+    const url = "/appServer/get_user_info";
     const response = await fetch(url);
     const data = await response.json();
     console.log(`Here's your user data`);

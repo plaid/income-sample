@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChakraProvider, Text } from "@chakra-ui/react";
-import { Box, Container, Flex, Heading, VStack } from "@chakra-ui/layout";
+import { Flex, Heading, VStack } from "@chakra-ui/layout";
 import { UserContext, PlaidConnectStatus } from "./components/UserContext";
 import UserStatus from "./components/UserStatus";
 

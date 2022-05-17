@@ -15,6 +15,10 @@ interface Props {
   successCallback: (_: string) => Promise<void>;
 }
 
+/**
+ * Launches Link, calling props.successCallback when complete. This could have
+ * been combined with the LinkLoader, but it got a bit unweildy
+ */
 export default function LaunchLink(props: Props) {
   // define onSuccess, onExit and onEvent functions as configs for Plaid Link creation
   const onSuccess = async (
