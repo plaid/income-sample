@@ -33,11 +33,12 @@ When you first start up the app, you'll be prompted to connect to a bank to load
 
 When asked to connect to a bank while in Sandbox mode, supply the credentials `user_good` and `pass_good` and the MFA code of `1234` if you're asked for it. In Sandbox mode, the only "income" that exists is the interest income on the Plaid Savings account. Payroll income is a little more exciting.
 
+In the debug panel is a button that simulates what the Income flow might look like if you were to run an income pre-check call with an employer that results in a "HIGH" confidence level. This call only works in Sandbox mode.
+
 ### TODOs
 
-- Add in the payroll income precheck
-- Clean up some of the Chakra UI components a bit
 - Display a more meaningful message for when you have pending document data
+- Clean up some of the Chakra UI components a bit
 - Try re-using our existing access tokens from Liabilities when creating a link token for bank income
 - Consider showing how you'd use a webhook for document flow
 - Make the error messaging fancier than an alert box

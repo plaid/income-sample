@@ -263,8 +263,9 @@ const fetchOrCreateUserToken = async () => {
 };
 
 /**
- * Determine whether or not the user is likely to be successful fetching
- * payroll income
+ * Simulates what Income precheck might look like if you were to run it with
+ * an employer that has a "HIGH" confidence level. This call only works
+ * in the sandbox environment.
  */
 app.post("/appServer/simulate_precheck", async (req, res, next) => {
   try {
