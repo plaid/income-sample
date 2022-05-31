@@ -54,6 +54,10 @@ const getUserRecord = async function () {
     console.log(`Retrieved userData ${userData}`);
     return userDataObj;
   } catch (error) {
+    if (error.code === "ENOENT") {
+      console.log("No user object found. We'll make one from scratch.");
+      return null;
+    }
     // Might happen first time, if file doesn't exist
     console.log("Got an error", error);
     return null;
@@ -73,6 +77,8 @@ let userRecord;
     userRecord[FIELD_USER_TOKEN] = null;
     userRecord[FIELD_USER_ID] = null;
   }
+  // Let's make sure we have a user token created at startup
+  await fetchOrCreateUserToken();
 })();
 
 /**
@@ -138,7 +144,7 @@ const basicLinkTokenObject = {
   language: "en",
   products: [],
   country_codes: ["US"],
-  webhook: "https://www.example.com/webhook",
+  webhook: "https://example.com/receive_webhook",
 };
 
 /**
@@ -247,7 +253,7 @@ const fetchOrCreateUserToken = async () => {
       client_user_id: userId,
     });
     const newUserToken = response.data.user_token;
-    console.log(`New user token is  ${newUserToken}`);
+    console.log(`New user token is  ${JSON.stringify(response.data)}`);
     // We'll save this because this can only be done once per user
     updateUserRecord(FIELD_USER_TOKEN, newUserToken);
     return newUserToken;
@@ -255,6 +261,34 @@ const fetchOrCreateUserToken = async () => {
     return userToken;
   }
 };
+
+/**
+ * Determine whether or not the user is likely to be successful fetching
+ * payroll income
+ */
+app.post("/appServer/simulate_precheck", async (req, res, next) => {
+  try {
+    if (process.env.PLAID_ENV !== "sandbox") {
+      res.status(500).json({
+        error: "This hard-coded example only works in the sandbox environment",
+      });
+      return;
+    }
+    const targetConfidence = req.body.confidence;
+    const employerName =
+      targetConfidence === "HIGH" ? "employer_good" : "Acme, Inc.";
+
+    const response = await plaidClient.creditPayrollIncomePrecheck({
+      user_token: userRecord[FIELD_USER_TOKEN],
+      employer: {
+        name: employerName,
+      },
+    });
+    res.json(response.data);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * Return payroll income for the user, either downloaded from their payroll

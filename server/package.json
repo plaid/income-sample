@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "watch": "nodemon server.js --ignore ./user_data.*"
+    "watch": "nodemon server.js --watch server.js"
   },
   "author": "Todd Kerpelman",
   "license": "MIT",
