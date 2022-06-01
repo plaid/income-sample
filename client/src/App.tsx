@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ChakraProvider, Text } from "@chakra-ui/react";
-import { Flex, Heading, VStack } from "@chakra-ui/layout";
+import { Box, Flex, Heading, VStack } from "@chakra-ui/layout";
 import { UserContext, PlaidConnectStatus } from "./components/UserContext";
 import UserStatus from "./components/UserStatus";
+import DebugPanel from "./components/DebugPanel";
 
 function App() {
   const [user, setUser] = useState({
@@ -42,6 +43,10 @@ function App() {
             <UserStatus />
           </UserContext.Provider>
         </VStack>
+
+        <Box width="80vw" position="fixed" bottom="0px">
+          <DebugPanel />
+        </Box>
       </Flex>
     </ChakraProvider>
   );

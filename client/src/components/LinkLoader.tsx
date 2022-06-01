@@ -79,6 +79,7 @@ const LinkLoader = (props: Props) => {
       : JSON.stringify({
           income: false,
         });
+
     const response = await fetch("/appServer/generate_link_token", {
       method: "POST",
       headers: { "Content-type": "application/json" },
