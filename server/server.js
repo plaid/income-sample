@@ -13,7 +13,11 @@ const USER_DATA_FILE = "user_data.json";
 const FIELD_ACCESS_TOKEN = "accessToken";
 const FIELD_USER_TOKEN = "incomeUserToken";
 const FIELD_INCOME_CONNECTED = "incomeConnected";
+const FIELD_PLAID_WEBHOOK_USER_ID = "plaidWebhookUserId";
 const FIELD_USER_ID = "userId";
+
+let webhookUrl =
+  process.env.WEBHOOK_URL || "https://www.example.com/server/receive_webhook";
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -76,6 +80,7 @@ let userRecord;
     userRecord[FIELD_INCOME_CONNECTED] = false;
     userRecord[FIELD_USER_TOKEN] = null;
     userRecord[FIELD_USER_ID] = null;
+    userRecord[FIELD_PLAID_WEBHOOK_USER_ID] = null;
   }
   // Let's make sure we have a user token created at startup
   await fetchOrCreateUserToken();
@@ -144,7 +149,6 @@ const basicLinkTokenObject = {
   language: "en",
   products: [],
   country_codes: ["US"],
-  webhook: "https://example.com/receive_webhook",
 };
 
 /**
@@ -169,6 +173,7 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
         ...basicLinkTokenObject,
         products: ["income_verification"],
         user_token: userToken,
+        webhook: webhookUrl,
         income_verification: income_verification_object,
       };
       console.log(
@@ -179,6 +184,7 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
       const newLiabilitiesTokenObject = {
         ...basicLinkTokenObject,
         products: ["liabilities"],
+        webhook: webhookUrl,
       };
       response = await plaidClient.linkTokenCreate(newLiabilitiesTokenObject);
     }
@@ -199,7 +205,7 @@ app.post("/appServer/swap_public_token", async (req, res, next) => {
       public_token: req.body.public_token,
     });
     console.log(`You got back ${JSON.stringify(response.data)}`);
-    updateUserRecord(FIELD_ACCESS_TOKEN, response.data.access_token);
+    await updateUserRecord(FIELD_ACCESS_TOKEN, response.data.access_token);
     res.json({ status: "success" });
   } catch (error) {
     next(error);
@@ -211,7 +217,7 @@ app.post("/appServer/swap_public_token", async (req, res, next) => {
  */
 app.post("/appServer/income_was_successful", async (req, res, next) => {
   try {
-    updateUserRecord(FIELD_INCOME_CONNECTED, true);
+    await updateUserRecord(FIELD_INCOME_CONNECTED, true);
     res.json({ status: true });
   } catch (error) {
     next(error);
@@ -252,10 +258,16 @@ const fetchOrCreateUserToken = async () => {
     const response = await plaidClient.userCreate({
       client_user_id: userId,
     });
-    const newUserToken = response.data.user_token;
     console.log(`New user token is  ${JSON.stringify(response.data)}`);
+    const newUserToken = response.data.user_token;
     // We'll save this because this can only be done once per user
-    updateUserRecord(FIELD_USER_TOKEN, newUserToken);
+    await updateUserRecord(FIELD_USER_TOKEN, newUserToken);
+    // This other user_id that gets returned is used by Plaid's webhooks to
+    // identify a specific user. In a real application, you would use this to
+    // know when it's safe to fetch income for a user who uploaded documents
+    // to Plaid for processing.
+    const userWebhookId = response.data.user_id;
+    await updateUserRecord(FIELD_PLAID_WEBHOOK_USER_ID, userWebhookId);
     return newUserToken;
   } else {
     return userToken;
@@ -323,6 +335,28 @@ app.get("/appServer/get_bank_income", async (req, res, next) => {
   }
 });
 
+/**
+ * A method for updating our item's webhook URL. For the purpose of Income,
+ * what's really important is that we're updating the variable in memory that
+ * we use to generate a Link Token. But it's good form to also update
+ * any webhooks stored with any access tokens we're actively using.
+ */
+app.post("/server/update_webhook", async (req, res, next) => {
+  try {
+    console.log(`Update our webhook with ${JSON.stringify(req.body)}`);
+    // Update the one we have in memory
+    webhookUrl = req.body.newUrl;
+    const access_token = userRecord[FIELD_ACCESS_TOKEN];
+    const updateResponse = await plaidClient.itemWebhookUpdate({
+      access_token: access_token,
+      webhook: req.body.newUrl,
+    });
+    res.json(updateResponse.data);
+  } catch (error) {
+    next(error);
+  }
+});
+
 const errorHandler = function (err, req, res, next) {
   console.error(`Your error: ${JSON.stringify(err)}`);
   console.error(err);
@@ -336,3 +370,108 @@ const errorHandler = function (err, req, res, next) {
   }
 };
 app.use(errorHandler);
+
+/**
+ * For development purposes, we're running a second server on port 8001 that's
+ * used to receive webhooks. This is so we can easily expose this endpoint to
+ * the external world using ngrok without exposing the rest of our application.
+ * See this tutorial for more details on using ngrok and webhooks:
+ * https://www.youtube.com/watch?v=0E0KEAVeDyc
+ */
+
+const WEBHOOK_PORT = process.env.WEBHOOK_PORT || 8001;
+
+const webhookApp = express();
+webhookApp.use(bodyParser.urlencoded({ extended: false }));
+webhookApp.use(bodyParser.json());
+
+const webhookServer = webhookApp.listen(WEBHOOK_PORT, function () {
+  console.log(
+    `Webhook receiver is up and running at http://localhost:${WEBHOOK_PORT}/`
+  );
+});
+
+webhookApp.post("/server/receive_webhook", async (req, res, next) => {
+  try {
+    console.log("Webhook received:");
+    console.dir(req.body, { colors: true, depth: null });
+
+    // TODO: Verify webhook.
+    const product = req.body.webhook_type;
+    const code = req.body.webhook_code;
+    switch (product) {
+      case "ITEM":
+        handleItemWebhook(code, req.body);
+        break;
+      case "INCOME":
+        handleIncomeWebhook(code, req.body);
+        break;
+      default:
+        console.log(`Can't handle webhook product ${product}`);
+        break;
+    }
+    res.json({ status: "received" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+function handleIncomeWebhook(code, requestBody) {
+  switch (code) {
+    case "INCOME_VERIFICATION":
+      const verificationStatus = requestBody.verification_status;
+      const webhookUserId = requestBody.user_id;
+      if (verificationStatus === "VERIFICATION_STATUS_PROCESSING_COMPLETE") {
+        console.log(
+          `Plaid has successfully completed payroll processing for the user with the webhook identifier of ${webhookUserId}. You should probably call /paystubs/get to refresh your data.`
+        );
+      } else if (
+        verificationStatus === "VERIFICATION_STATUS_PROCESSING_FAILED"
+      ) {
+        console.log(
+          `Plaid had trouble processing documents for the user with the webhook identifier of ${webhookUserId}. You should ask them to try again.`
+        );
+      } else if (
+        verificationStatus === "VERIFICATION_STATUS_PENDING_APPROVAL"
+      ) {
+        console.log(
+          `Plaid is waiting for the user with the webhook identifier of ${webhookUserId} to approve their income verification.`
+        );
+      }
+      break;
+    default:
+      console.log(`Can't handle webhook code ${code}`);
+      break;
+  }
+}
+
+function handleItemWebhook(code, requestBody) {
+  switch (code) {
+    case "ERROR":
+      console.log(
+        `I received this error: ${requestBody.error.error_message}| should probably ask this user to connect to their bank`
+      );
+      break;
+    case "NEW_ACCOUNTS_AVAILABLE":
+      console.log(
+        `There are new accounts available at this Financial Institution! (Id: ${requestBody.item_id}) We might want to ask the user to share them with us`
+      );
+      break;
+    case "PENDING_EXPIRATION":
+      console.log(
+        `We should tell our user to reconnect their bank with Plaid so there's no disruption to their service`
+      );
+      break;
+    case "USER_PERMISSION_REVOKED":
+      console.log(
+        `The user revoked access to this item. We should remove it from our records`
+      );
+      break;
+    case "WEBHOOK_UPDATE_ACKNOWLEDGED":
+      console.log(`Future webhooks will be sent to this endpoint.`);
+      break;
+    default:
+      console.log(`Can't handle webhook code ${code}`);
+      break;
+  }
+}

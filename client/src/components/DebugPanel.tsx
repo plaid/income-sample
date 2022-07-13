@@ -6,9 +6,15 @@ import {
   AccordionPanel,
   AccordionIcon,
   Button,
+  Input,
+  Flex,
+  Spacer,
 } from "@chakra-ui/react";
+import { useState } from "react";
 
 const DebugPanel = () => {
+  const [webhookURL, setWebhookURL] = useState("");
+
   const performPrecheck = async (targetConfidence: string) => {
     const precheckResponse = await fetch("/appServer/simulate_precheck", {
       method: "POST",
@@ -28,24 +34,54 @@ const DebugPanel = () => {
     }
   };
 
+  const updateWebhook = async () => {
+    const webhookResponse = await fetch("/server/update_webhook", {
+      method: "POST",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({ newUrl: webhookURL }),
+    });
+    const webhookResponseData = await webhookResponse.json();
+    console.log(
+      `Response from updating webhook: ${JSON.stringify(webhookResponseData)}`
+    );
+  };
+
   return (
     <Accordion allowToggle width="100%">
       <AccordionItem>
         <AccordionPanel pb={4}>
           <Button
-            colorScheme="green"
+            colorScheme="teal"
             onClick={() => performPrecheck("HIGH")}
             mr={4}
           >
             Simulate a good pre-check
           </Button>
           <Button
-            colorScheme="green"
+            colorScheme="yellow"
             onClick={() => performPrecheck("UNKNOWN")}
           >
             Reset our pre-check
           </Button>
         </AccordionPanel>
+        <AccordionPanel pb={4}>
+          <Flex gap={2}>
+            <Input
+              placeholder="https://webhookurlgoeshere.com/server/receive_webhook"
+              onChange={(e) => setWebhookURL(e.target.value)}
+              value={webhookURL}
+            />
+            <Spacer />
+            <Button
+              paddingX="2rem"
+              colorScheme="yellow"
+              onClick={() => updateWebhook()}
+            >
+              Update webhook
+            </Button>
+          </Flex>
+        </AccordionPanel>
+
         <h2>
           <AccordionButton>
             <Box flex="1" textAlign="left">
