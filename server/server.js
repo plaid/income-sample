@@ -339,7 +339,9 @@ app.get("/appServer/get_bank_income", async (req, res, next) => {
  * A method for updating our item's webhook URL. For the purpose of Income,
  * what's really important is that we're updating the variable in memory that
  * we use to generate a Link Token. But it's good form to also update
- * any webhooks stored with any access tokens we're actively using.
+ * any webhooks stored with any access tokens we're actively using, because
+ * those items will still be pointing to the old (and probably invalid) webhook
+ * location.
  */
 app.post("/server/update_webhook", async (req, res, next) => {
   try {

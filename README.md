@@ -31,7 +31,7 @@ When you first start up the app, you'll be prompted to connect to a bank to load
 
 When asked to connect to a bank while in Sandbox mode, supply the credentials `user_good` and `pass_good` and the MFA code of `1234` if you're asked for it. In Sandbox mode, the only "income" that exists is the interest income on the Plaid Savings account. Payroll income is a little more exciting.
 
-In the debug panel is a button that simulates what the Income flow might look like if you were to run an income pre-check call with an employer that results in a "HIGH" confidence level. This call only works in Sandbox mode.
+In the debug panel (the little accordion component at the bottom of the screen) is a button that simulates what the Income flow might look like if you were to run an income pre-check call with an employer that results in a "HIGH" confidence level. This call only works in Sandbox mode.
 
 ## (Optional) Receiving webhooks
 
@@ -49,7 +49,7 @@ Once you've done this, you'll need to tell the sample app about the location of 
 WEBHOOK_URL=https://1234-56-789-123-456.ngrok.io/server/receive_webhook/
 ```
 
-It's best to do this before you start up the server, but you can also submit the new webhook URL into the debug panel on the client and that will also change the location of the webhook for all future calls.
+It's best to do this before you start up the server, but you can also submit the new webhook URL into the debug panel (the little accordion component at the bottom of the browser screen) and that will also change the location of the webhook for all future calls.
 
 For more information on Plaid webhooks, check out our [documentation](https://plaid.com/docs/api/webhooks/) or you can refer to our [video tutorial](https://www.youtube.com/watch?v=0E0KEAVeDyc).
 
