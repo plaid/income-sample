@@ -67,7 +67,7 @@ const BankIncome = () => {
   }, [getIncome, user.incomeConnected, user.incomeUpdateTime]);
 
   return (
-    <Box minW="40vw">
+    <Box width="40vw">
       <VStack>
         <Heading as="h4" size="md">
           Bank income
@@ -84,7 +84,13 @@ const BankIncome = () => {
             Identify income by locating recurring deposits in your bank account.
           </Box>
         ) : (
-          <Flex direction={{ base: "column", lg: "row" }} gap={2}>
+          <Flex
+            maxWidth="100%"
+            flexWrap="wrap"
+            justifyContent="space-evenly"
+            direction={{ base: "column", lg: "row" }}
+            gap={2}
+          >
             {bankIncome.map((e: BankData, idx) => (
               <Box
                 key={e.income_id}
