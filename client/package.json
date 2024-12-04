@@ -40,5 +40,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "svgo": {
+      "nth-check": ">=2.0.2"
+    },
+    "react-scripts": {
+      "postcss": ">=8.4.31"
+    }
   }
 }
