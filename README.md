@@ -30,10 +30,9 @@ Would you like to be the first to own a pre-owned hoverboard? Well, you're in lu
 When you first start up the app, you'll be prompted to connect to a bank to load up your liabilities, and connect to your Payroll provider (or bank) to load up your sources of income! We provide you with the opportunity to add additional sources of income as well.
 
 >[!IMPORTANT]
-> When adding liabilities in the Sandbox environment, you must use a non-OAuth bank (like Houndstooth Bank) and select a liabilities-compatible account, like a credit card. Selecting an OAuth bank in the Sandbox or picking an account that doesn't work with liabilities will cause link to fail with a "no supported liabilities accounts" error.
-
->[!IMPORTANT]
-> When adding bank income in the Sandbox environment, you must use a non-OAuth bank (like Houndstooth Bank) and supply the credentials **`user_bank_income`** and **`{}`** and the MFA code of `1234` if you're asked for it. This is different from the credentials you will be shown at the bottom of the page! For more test accounts that work great with Income, see the [docs](https://plaid.com/docs/sandbox/test-credentials/#credit-and-income-testing-credentials).
+> When adding **liabilities** in the Sandbox environment, you must use a non-OAuth bank (like Houndstooth Bank) and select a liabilities-compatible account, like a credit card. Selecting an OAuth bank in the Sandbox or picking an account that doesn't work with liabilities will cause link to fail with a "no supported liabilities accounts" error.
+>
+> When adding **bank income** in the Sandbox environment, you must use a non-OAuth bank (like Houndstooth Bank) and supply the credentials **`user_bank_income`** and **`{}`** and the MFA code of `1234` if you're asked for it. This is different from the credentials you will be shown at the bottom of the page! For more test accounts that work great with Income, see the [docs](https://plaid.com/docs/sandbox/test-credentials/#credit-and-income-testing-credentials).
 
 In the debug panel (the little accordion component at the bottom of the screen) is a button that simulates what the Income flow might look like if you were to run an income pre-check call with an employer that results in a "HIGH" confidence level. This call only works in Sandbox mode.
 
