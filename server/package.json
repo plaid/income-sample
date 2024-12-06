@@ -14,8 +14,8 @@
     "body-parser": "^1.20.0",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
-    "nodemon": "^2.0.15",
-    "plaid": "^10.2.0",
+    "nodemon": "^3.1.7",
+    "plaid": "^30.0.0",
     "uuid": "^8.3.2"
   },
   "engines": {
