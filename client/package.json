@@ -1,7 +1,8 @@
 {
-  "name": "incomesample",
+  "name": "roxyfundz",
   "version": "0.1.0",
   "private": true,
+  "description": "Roxyfundz application",
   "dependencies": {
     "@chakra-ui/layout": "^1.8.0",
     "@chakra-ui/react": "^1.8.8",
