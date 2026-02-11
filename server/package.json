@@ -11,11 +11,11 @@
   "author": "Todd Kerpelman",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.20.3",
+    "body-parser": "^1.20.4",
     "dotenv": "^16.6.1",
-    "express": "^4.21.2",
-    "nodemon": "^3.1.10",
-    "plaid": "^39.1.0",
+    "express": "^4.22.1",
+    "nodemon": "^3.1.11",
+    "plaid": "^41.1.0",
     "uuid": "^9.0.1"
   },
   "engines": {
