@@ -2,52 +2,28 @@
   "name": "incomesample",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@chakra-ui/layout": "^1.8.0",
     "@chakra-ui/react": "^1.8.9",
     "@chakra-ui/system": "^1.12.1",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.13",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-plaid-link": "^4.1.1",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^5.1.0"
+    "react-plaid-link": "^4.1.1"
   },
-  "proxy": "http://localhost:8080",
+  "devDependencies": {
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vite": "^8.0.8"
+  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "overrides": {
-    "svgo": {
-      "nth-check": ">=2.0.2"
-    },
-    "react-scripts": {
-      "postcss": ">=8.4.31"
-    },
     "react-focus-lock": {
       "react": "$react",
       "react-dom": "$react-dom"
