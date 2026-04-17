@@ -19,9 +19,9 @@ In lieu of setting up an actual database to keep track of user info, we store ev
 To get the client running...
 
 - cd into the client directory and run `npm install`
-- run `npm start`. This will start React in development mode, with automatic reloading and all that fun stuff.
+- run `npm start`. This will start the Vite dev server with hot module replacement.
 
-Go ahead and open up the client page in the browser if it doesn't open automatically (by default, this should be http://localhost:3000)
+Open up http://localhost:3000 in your browser to view the app.
 
 ## Using the application
 
