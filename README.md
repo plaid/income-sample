@@ -1,3 +1,9 @@
+>[!IMPORTANT]
+> For most use cases, Plaid Income has been superceded by Plaid Check. Plaid Income should only be used for use cases not covered by Plaid Check, like verifying non-US users or using document-based verification rather than bank-based verification. For everything else, see the [Plaid Check Quickstart](https://github.com/plaid/credit-quickstart). 
+>
+>
+> Customers who begin using Plaid Income on or after December 10, 2025 must contact their account manager or support to request that their account be enabled for user tokens.
+
 # Plaid Income Sample
 
 This is a fairly simple application using React on the frontend, NodeJS on the backend and a text file as our database which demonstrates how to make calls against the Plaid Income API.
