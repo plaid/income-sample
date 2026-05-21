@@ -1,5 +1,7 @@
 "use strict";
+
 require("dotenv").config();
+
 const fs = require("fs/promises");
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -15,6 +17,65 @@ const FIELD_USER_TOKEN = "incomeUserToken";
 const FIELD_INCOME_CONNECTED = "incomeConnected";
 const FIELD_PLAID_WEBHOOK_USER_ID = "plaidWebhookUserId";
 const FIELD_USER_ID = "userId";
+
+const REDACTED = "[REDACTED]";
+
+const SENSITIVE_KEY_PATTERNS = [
+  "access_token",
+  "accesstoken",
+  "public_token",
+  "publictoken",
+  "user_token",
+  "usertoken",
+  "incomeusertoken",
+  "link_token",
+  "linktoken",
+  "processor_token",
+  "processortoken",
+  "secret",
+  "plaid-secret",
+  "authorization",
+  "cookie",
+  "password",
+];
+
+const isSensitiveKey = (key) => {
+  const normalizedKey = String(key).toLowerCase().replace(/[^a-z0-9_-]/g, "");
+
+  return SENSITIVE_KEY_PATTERNS.some((pattern) =>
+    normalizedKey.includes(pattern)
+  );
+};
+
+const redactSensitiveData = (value) => {
+  if (value == null) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(redactSensitiveData);
+  }
+
+  if (typeof value !== "object") {
+    return value;
+  }
+
+  const redactedObject = {};
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    redactedObject[key] = isSensitiveKey(key)
+      ? REDACTED
+      : redactSensitiveData(nestedValue);
+  }
+
+  return redactedObject;
+};
+
+const safeStringify = (value) => JSON.stringify(redactSensitiveData(value));
+
+const logSafeObject = (message, value) => {
+  console.log(`${message} ${safeStringify(value)}`);
+};
 
 let webhookUrl =
   process.env.WEBHOOK_URL || "https://www.example.com/server/receive_webhook";
@@ -46,7 +107,7 @@ const plaidClient = new PlaidApi(plaidConfig);
 // app.
 
 /**
- * Retrieve our user record from our  our flat file
+ * Retrieve our user record from our flat file
  * @returns {Object} userDataObject
  */
 const getUserRecord = async function () {
@@ -54,16 +115,19 @@ const getUserRecord = async function () {
     const userData = await fs.readFile(USER_DATA_FILE, {
       encoding: "utf8",
     });
-    const userDataObj = await JSON.parse(userData);
-    console.log(`Retrieved userData ${userData}`);
+
+    const userDataObj = JSON.parse(userData);
+
+    console.log("Retrieved user record from file.");
+
     return userDataObj;
   } catch (error) {
     if (error.code === "ENOENT") {
       console.log("No user object found. We'll make one from scratch.");
       return null;
     }
-    // Might happen first time, if file doesn't exist
-    console.log("Got an error", error);
+
+    console.log("Got an error while reading user record:", error.message);
     return null;
   }
 };
@@ -72,8 +136,10 @@ const getUserRecord = async function () {
  * This loads our user record into memory when we first start up
  */
 let userRecord;
+
 (async () => {
   userRecord = await getUserRecord();
+
   if (userRecord == null) {
     userRecord = {};
     userRecord[FIELD_ACCESS_TOKEN] = null;
@@ -82,6 +148,7 @@ let userRecord;
     userRecord[FIELD_USER_ID] = null;
     userRecord[FIELD_PLAID_WEBHOOK_USER_ID] = null;
   }
+
   // Let's make sure we have a user token created at startup
   await fetchOrCreateUserToken();
 })();
@@ -90,19 +157,22 @@ let userRecord;
  * Updates the user record in memory and writes it to a file. In a real
  * application, you'd be writing to a database.
  * @param {string} key
- * @param {string | number} val
+ * @param {string | number | boolean | null} val
  */
 const updateUserRecord = async function (key, val) {
   userRecord[key] = val;
+
   try {
     const dataToWrite = JSON.stringify(userRecord);
+
     await fs.writeFile(USER_DATA_FILE, dataToWrite, {
       encoding: "utf8",
       mode: 0o600,
     });
-    console.log(`User record ${dataToWrite} written to file.`);
+
+    console.log(`Updated user record field "${key}" and wrote it to file.`);
   } catch (error) {
-    console.log("Got an error: ", error);
+    console.log("Got an error while writing user record:", error.message);
   }
 };
 
@@ -114,12 +184,11 @@ const updateUserRecord = async function (key, val) {
 const getLazyUserID = async function () {
   if (userRecord.userId != null && userRecord.userId !== "") {
     return userRecord.userId;
-  } else {
-    // Let's lazily instantiate it!
-    const randomUserId = "user_" + uuidv4();
-    await updateUserRecord(FIELD_USER_ID, randomUserId);
-    return randomUserId;
   }
+
+  const randomUserId = "user_" + uuidv4();
+  await updateUserRecord(FIELD_USER_ID, randomUserId);
+  return randomUserId;
 };
 
 /**
@@ -131,9 +200,11 @@ app.get("/appServer/get_user_info", async (req, res, next) => {
     const income_status =
       userRecord[FIELD_INCOME_CONNECTED] != null &&
       userRecord[FIELD_INCOME_CONNECTED] !== false;
+
     const liability_status =
       userRecord[FIELD_ACCESS_TOKEN] != null &&
       userRecord[FIELD_ACCESS_TOKEN] !== "";
+
     res.json({
       liability_status: liability_status,
       income_status: income_status,
@@ -144,7 +215,9 @@ app.get("/appServer/get_user_info", async (req, res, next) => {
 });
 
 const basicLinkTokenObject = {
-  user: { client_user_id: "testUser" },
+  user: {
+    client_user_id: "testUser",
+  },
   client_name: "Todd's Hoverboards",
   language: "en",
   products: [],
@@ -158,9 +231,12 @@ const basicLinkTokenObject = {
 app.post("/appServer/generate_link_token", async (req, res, next) => {
   try {
     let response;
+
     if (req.body.income === true) {
       const userToken = await fetchOrCreateUserToken();
-      console.log(`User token returned: ${userToken}`);
+
+      console.log("Income user token resolved.");
+
       const income_verification_object =
         req.body.incomeType === "payroll"
           ? { income_source_types: ["payroll"] }
@@ -176,9 +252,9 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
         webhook: webhookUrl,
         income_verification: income_verification_object,
       };
-      console.log(
-        `Here's your token object: ${JSON.stringify(newIncomeTokenObject)}`
-      );
+
+      logSafeObject("Creating income Link token with request:", newIncomeTokenObject);
+
       response = await plaidClient.linkTokenCreate(newIncomeTokenObject);
     } else {
       const newLiabilitiesTokenObject = {
@@ -186,11 +262,15 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
         products: ["liabilities"],
         webhook: webhookUrl,
       };
+
+      console.log("Creating liabilities Link token.");
+
       response = await plaidClient.linkTokenCreate(newLiabilitiesTokenObject);
     }
+
     res.json(response.data);
   } catch (error) {
-    console.log(`Running into an error!`);
+    console.log("Running into an error!");
     next(error);
   }
 });
@@ -204,8 +284,11 @@ app.post("/appServer/swap_public_token", async (req, res, next) => {
     const response = await plaidClient.itemPublicTokenExchange({
       public_token: req.body.public_token,
     });
-    console.log(`You got back ${JSON.stringify(response.data)}`);
+
+    console.log("Successfully exchanged public token for access token.");
+
     await updateUserRecord(FIELD_ACCESS_TOKEN, response.data.access_token);
+
     res.json({ status: "success" });
   } catch (error) {
     next(error);
@@ -232,6 +315,7 @@ app.get("/appServer/fetch_liabilities", async (req, res, next) => {
     const response = await plaidClient.liabilitiesGet({
       access_token: userRecord[FIELD_ACCESS_TOKEN],
     });
+
     res.json(response.data);
   } catch (error) {
     next(error);
@@ -252,26 +336,33 @@ const fetchOrCreateUserToken = async () => {
   const userToken = userRecord[FIELD_USER_TOKEN];
 
   if (userToken == null || userToken === "") {
-    // We're gonna need to generate one!
     const userId = await getLazyUserID();
+
     console.log(`Got a user ID of ${userId}`);
+
     const response = await plaidClient.userCreate({
       client_user_id: userId,
     });
-    console.log(`New user token is  ${JSON.stringify(response.data)}`);
+
+    console.log("Created new Plaid user token.");
+
     const newUserToken = response.data.user_token;
+
     // We'll save this because this can only be done once per user
     await updateUserRecord(FIELD_USER_TOKEN, newUserToken);
+
     // This other user_id that gets returned is used by Plaid's webhooks to
     // identify a specific user. In a real application, you would use this to
     // know when it's safe to fetch income for a user who uploaded documents
     // to Plaid for processing.
     const userWebhookId = response.data.user_id;
+
     await updateUserRecord(FIELD_PLAID_WEBHOOK_USER_ID, userWebhookId);
+
     return newUserToken;
-  } else {
-    return userToken;
   }
+
+  return userToken;
 };
 
 /**
@@ -287,6 +378,7 @@ app.post("/appServer/simulate_precheck", async (req, res, next) => {
       });
       return;
     }
+
     const targetConfidence = req.body.confidence;
     const employerName =
       targetConfidence === "HIGH" ? "employer_good" : "Acme, Inc.";
@@ -297,30 +389,25 @@ app.post("/appServer/simulate_precheck", async (req, res, next) => {
         name: employerName,
       },
     });
+
     res.json(response.data);
   } catch (error) {
     next(error);
   }
 });
 
-/**
- * Return payroll income for the user, either downloaded from their payroll
- * provider, or scanned in from documents
- */
 app.get("/appServer/get_payroll_income", async (req, res, next) => {
   try {
     const response = await plaidClient.creditPayrollIncomeGet({
       user_token: userRecord[FIELD_USER_TOKEN],
     });
+
     res.json(response.data);
   } catch (error) {
     next(error);
   }
 });
 
-/**
- * Return income for the user, as inferred from their bank transactions.
- */
 app.get("/appServer/get_bank_income", async (req, res, next) => {
   try {
     const response = await plaidClient.creditBankIncomeGet({
@@ -329,30 +416,27 @@ app.get("/appServer/get_bank_income", async (req, res, next) => {
         count: 3,
       },
     });
+
     res.json(response.data);
   } catch (error) {
     next(error);
   }
 });
 
-/**
- * A method for updating our item's webhook URL. For the purpose of Income,
- * what's really important is that we're updating the variable in memory that
- * we use to generate a Link Token. But it's good form to also update
- * any webhooks stored with any access tokens we're actively using, because
- * those items will still be pointing to the old (and probably invalid) webhook
- * location.
- */
 app.post("/server/update_webhook", async (req, res, next) => {
   try {
-    console.log(`Update our webhook with ${JSON.stringify(req.body)}`);
-    // Update the one we have in memory
+    console.log("Updating webhook URL.");
+
+    // update the one we have in memory
     webhookUrl = req.body.newUrl;
+
     const access_token = userRecord[FIELD_ACCESS_TOKEN];
+
     const updateResponse = await plaidClient.itemWebhookUpdate({
       access_token: access_token,
       webhook: req.body.newUrl,
     });
+
     res.json(updateResponse.data);
   } catch (error) {
     next(error);
@@ -360,8 +444,14 @@ app.post("/server/update_webhook", async (req, res, next) => {
 });
 
 const errorHandler = function (err, req, res, next) {
-  console.error(`Your error: ${JSON.stringify(err)}`);
-  console.error(err);
+  const safeError = {
+    message: err.message,
+    status: err.status,
+    response: err.response?.data,
+  };
+
+  logSafeObject("Your error:", safeError);
+
   if (err.response?.data != null) {
     res.status(500).send(err.response.data);
   } else {
@@ -371,6 +461,7 @@ const errorHandler = function (err, req, res, next) {
     });
   }
 };
+
 app.use(errorHandler);
 
 /**
@@ -380,7 +471,6 @@ app.use(errorHandler);
  * See this tutorial for more details on using ngrok and webhooks:
  * https://www.youtube.com/watch?v=0E0KEAVeDyc
  */
-
 const WEBHOOK_PORT = process.env.WEBHOOK_PORT || 8001;
 
 const webhookApp = express();
@@ -396,11 +486,12 @@ const webhookServer = webhookApp.listen(WEBHOOK_PORT, function () {
 webhookApp.post("/server/receive_webhook", async (req, res, next) => {
   try {
     console.log("Webhook received:");
-    console.dir(req.body, { colors: true, depth: null });
+    logSafeObject("Webhook body:", req.body);
 
     // TODO: Verify webhook.
     const product = req.body.webhook_type;
     const code = req.body.webhook_code;
+
     switch (product) {
       case "ITEM":
         handleItemWebhook(code, req.body);
@@ -412,6 +503,7 @@ webhookApp.post("/server/receive_webhook", async (req, res, next) => {
         console.log(`Can't handle webhook product ${product}`);
         break;
     }
+
     res.json({ status: "received" });
   } catch (error) {
     next(error);
@@ -420,9 +512,10 @@ webhookApp.post("/server/receive_webhook", async (req, res, next) => {
 
 function handleIncomeWebhook(code, requestBody) {
   switch (code) {
-    case "INCOME_VERIFICATION":
+    case "INCOME_VERIFICATION": {
       const verificationStatus = requestBody.verification_status;
       const webhookUserId = requestBody.user_id;
+
       if (verificationStatus === "VERIFICATION_STATUS_PROCESSING_COMPLETE") {
         console.log(
           `Plaid has successfully completed payroll processing for the user with the webhook identifier of ${webhookUserId}. You should probably call /paystubs/get to refresh your data.`
@@ -440,7 +533,9 @@ function handleIncomeWebhook(code, requestBody) {
           `Plaid is waiting for the user with the webhook identifier of ${webhookUserId} to approve their income verification.`
         );
       }
+
       break;
+    }
     default:
       console.log(`Can't handle webhook code ${code}`);
       break;
@@ -461,16 +556,14 @@ function handleItemWebhook(code, requestBody) {
       break;
     case "PENDING_EXPIRATION":
       console.log(
-        `We should tell our user to reconnect their bank with Plaid so there's no disruption to their service`
+        "We should tell our user to reconnect their bank with Plaid so there's no disruption to their service"
       );
       break;
     case "USER_PERMISSION_REVOKED":
-      console.log(
-        `The user revoked access to this item. We should remove it from our records`
-      );
+      console.log("The user revoked access to this item. We should remove it from our records");
       break;
     case "WEBHOOK_UPDATE_ACKNOWLEDGED":
-      console.log(`Future webhooks will be sent to this endpoint.`);
+      console.log("Future webhooks will be sent to this endpoint.");
       break;
     default:
       console.log(`Can't handle webhook code ${code}`);
