@@ -23,10 +23,6 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const server = app.listen(APP_PORT, function () {
-  console.log(`Server is up and running at http://localhost:${APP_PORT}/`);
-});
-
 // Set up the Plaid client
 const plaidConfig = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV],
@@ -83,7 +79,19 @@ let userRecord;
     userRecord[FIELD_PLAID_WEBHOOK_USER_ID] = null;
   }
   // Let's make sure we have a user token created at startup
-  await fetchOrCreateUserToken();
+  try {
+    await fetchOrCreateUserToken();
+  } catch (error) {
+    console.error(
+      "Couldn't create a user token at startup. Double-check your PLAID_CLIENT_ID / PLAID_SECRET, and note that accounts created on or after 2025-12-10 must be enabled for user tokens by Plaid support.",
+      error
+    );
+  }
+  // Start listening only once userRecord is populated, so we never handle a
+  // request against an undefined userRecord.
+  app.listen(APP_PORT, function () {
+    console.log(`Server is up and running at http://localhost:${APP_PORT}/`);
+  });
 })();
 
 /**
@@ -144,7 +152,6 @@ app.get("/appServer/get_user_info", async (req, res, next) => {
 });
 
 const basicLinkTokenObject = {
-  user: { client_user_id: "testUser" },
   client_name: "Todd's Hoverboards",
   language: "en",
   products: [],
@@ -158,6 +165,9 @@ const basicLinkTokenObject = {
 app.post("/appServer/generate_link_token", async (req, res, next) => {
   try {
     let response;
+    // Use the same stable, non-PII client_user_id we created the Plaid user
+    // with, per Plaid's Link token guidance.
+    const clientUserId = await getLazyUserID();
     if (req.body.income === true) {
       const userToken = await fetchOrCreateUserToken();
       console.log(`User token returned: ${userToken}`);
@@ -171,6 +181,7 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
 
       const newIncomeTokenObject = {
         ...basicLinkTokenObject,
+        user: { client_user_id: clientUserId },
         products: ["income_verification"],
         user_token: userToken,
         webhook: webhookUrl,
@@ -183,6 +194,7 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
     } else {
       const newLiabilitiesTokenObject = {
         ...basicLinkTokenObject,
+        user: { client_user_id: clientUserId },
         products: ["liabilities"],
         webhook: webhookUrl,
       };

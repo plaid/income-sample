@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { UserContext } from "./UserContext";
 import LinkLoader, { IncomeType } from "./LinkLoader";
-import { Badge, Box, Flex, Heading, VStack } from "@chakra-ui/layout";
+import { Badge, Box, Flex, Heading, VStack } from "@chakra-ui/react";
 
 interface PayrollData {
   employer: string;
@@ -28,7 +28,7 @@ const PayrollIncome = () => {
     console.log("Payroll Income: ", data);
     // `items` is an array of objects, each of which contains an array of
     // `payroll` income objects, each of which contains an array of `pay_stubs`
-    const allPayrollIncome = data.items
+    const allPayrollIncome = (data.items ?? [])
       .filter(
         (item: any) => item.status.processing_status === "PROCESSING_COMPLETE"
       )
