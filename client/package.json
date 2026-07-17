@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@chakra-ui/layout": "^1.8.0",
-    "@chakra-ui/react": "^1.8.9",
-    "@chakra-ui/system": "^1.12.1",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "framer-motion": "^11.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-plaid-link": "^4.1.1"
@@ -22,27 +23,5 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview"
-  },
-  "overrides": {
-    "react-focus-lock": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    },
-    "react-remove-scroll": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    },
-    "@reach/alert": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    },
-    "@reach/utils": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    },
-    "@reach/visually-hidden": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    }
   }
 }

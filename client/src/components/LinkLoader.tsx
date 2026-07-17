@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { UserContext, PlaidConnectStatus } from "./UserContext";
 import LaunchLink from "./LinkLauncher";
-import { Button } from "@chakra-ui/button";
+import { Button } from "@chakra-ui/react";
 
 export enum IncomeType {
   Bank = "bank",
@@ -27,7 +27,9 @@ const LinkLoader = (props: Props) => {
 
   const loadAndLaunchLink = async () => {
     const linkToken = await fetchLinkToken();
-    setLinkToken(linkToken);
+    if (linkToken) {
+      setLinkToken(linkToken);
+    }
   };
 
   const linkSuccess = async (public_token: String) => {
@@ -85,16 +87,15 @@ const LinkLoader = (props: Props) => {
       headers: { "Content-type": "application/json" },
       body: messageBody,
     });
-    if (response.status === 500) {
+    if (!response.ok) {
       alert(
         "We received an error trying to create a link token. Please make sure you've followed all the setup steps in the readme file, and that your account is activated for income verification."
       );
-    } else {
-      const data = await response.json();
-
-      console.log(`Got back link token ${data.link_token}`);
-      return data.link_token;
+      return;
     }
+    const data = await response.json();
+    console.log(`Got back link token ${data.link_token}`);
+    return data.link_token;
   };
 
   return (

@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { UserContext } from "./UserContext";
 import LinkLoader, { IncomeType } from "./LinkLoader";
-import { Box, Flex, Heading, VStack } from "@chakra-ui/layout";
+import { Box, Flex, Heading, VStack } from "@chakra-ui/react";
 
 interface BankData {
   bank_name: string;

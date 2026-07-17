@@ -4,8 +4,7 @@ import PayrollIncome from "./PayrollIncome";
 import Liabilities from "./Liabilities";
 import LinkLoader, { IncomeType } from "./LinkLoader";
 import { UserContext, PlaidConnectStatus } from "./UserContext";
-import { Flex, Heading, Spacer, VStack } from "@chakra-ui/layout";
-import { Text } from "@chakra-ui/react";
+import { Flex, Heading, Spacer, VStack, Text } from "@chakra-ui/react";
 
 /**
  * This object queries the server to find out if the user has connected their

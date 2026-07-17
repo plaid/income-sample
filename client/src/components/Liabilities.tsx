@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, VStack } from "@chakra-ui/layout";
+import { Box, Flex, Heading, VStack } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
 
 enum LiabilityType {
@@ -77,6 +77,10 @@ const Liabilities = () => {
 
 const normalizeLiabilityData = (data: any) => {
   // A little bit of work to merge these...
+  // Bail out if we got back an error body instead of liabilities data.
+  if (data?.liabilities == null || data?.accounts == null) {
+    return [];
+  }
   type CreditType = {
     account_id: string;
     aprs: {
