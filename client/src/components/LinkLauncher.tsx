@@ -12,7 +12,7 @@ import {
 interface Props {
   isIncome?: boolean;
   token: string;
-  successCallback: (_: string) => Promise<void>;
+  successCallback: (_: string | null) => Promise<void>;
 }
 
 /**
@@ -22,7 +22,7 @@ interface Props {
 export default function LaunchLink(props: Props) {
   // define onSuccess, onExit and onEvent functions as configs for Plaid Link creation
   const onSuccess = async (
-    publicToken: string,
+    publicToken: string | null,
     metadata: PlaidLinkOnSuccessMetadata
   ) => {
     console.log(`Hooray! Public token is ${publicToken}`);
