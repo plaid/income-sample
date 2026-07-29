@@ -32,7 +32,7 @@ const LinkLoader = (props: Props) => {
     }
   };
 
-  const linkSuccess = async (public_token: String) => {
+  const linkSuccess = async (public_token: string | null) => {
     if (public_token != null && public_token !== "") {
       if (props.income) {
         await incomeSuccess(public_token);
