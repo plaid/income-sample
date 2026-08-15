@@ -11,9 +11,8 @@ const USER_DATA_FILE = "user_data.json";
 
 // Fields used for the userRecord object
 const FIELD_ACCESS_TOKEN = "accessToken";
-const FIELD_USER_TOKEN = "incomeUserToken";
+const FIELD_PLAID_USER_ID = "plaidUserId";
 const FIELD_INCOME_CONNECTED = "incomeConnected";
-const FIELD_PLAID_WEBHOOK_USER_ID = "plaidWebhookUserId";
 const FIELD_USER_ID = "userId";
 
 let webhookUrl =
@@ -37,7 +36,22 @@ const plaidConfig = new Configuration({
 
 const plaidClient = new PlaidApi(plaidConfig);
 
-// Instead of using a database to store our user token, we're writing it
+/**
+ * Extracts the useful, loggable part of an error. Axios attaches a `config`
+ * object to its errors that contains the outgoing request headers -- including
+ * our PLAID-SECRET -- so we never log one of those wholesale.
+ * @param {Error} error
+ * @returns {Object | string | Error} something safe to log
+ */
+const describeError = function (error) {
+  if (error.response?.data != null) {
+    // Plaid tells us what went wrong in the response body
+    return error.response.data;
+  }
+  return error.isAxiosError ? error.message : error;
+};
+
+// Instead of using a database to store our user's Plaid ID, we're writing it
 // to a flat file. Convenient for demo purposes, a terrible idea for a production
 // app.
 
@@ -74,17 +88,16 @@ let userRecord;
     userRecord = {};
     userRecord[FIELD_ACCESS_TOKEN] = null;
     userRecord[FIELD_INCOME_CONNECTED] = false;
-    userRecord[FIELD_USER_TOKEN] = null;
+    userRecord[FIELD_PLAID_USER_ID] = null;
     userRecord[FIELD_USER_ID] = null;
-    userRecord[FIELD_PLAID_WEBHOOK_USER_ID] = null;
   }
-  // Let's make sure we have a user token created at startup
+  // Let's make sure we have a Plaid user created at startup
   try {
-    await fetchOrCreateUserToken();
+    await fetchOrCreatePlaidUserId();
   } catch (error) {
     console.error(
-      "Couldn't create a user token at startup. Double-check your PLAID_CLIENT_ID / PLAID_SECRET, and note that accounts created on or after 2025-12-10 must be enabled for user tokens by Plaid support.",
-      error
+      "Couldn't create a Plaid user at startup. Double-check your PLAID_CLIENT_ID / PLAID_SECRET.",
+      describeError(error)
     );
   }
   // Start listening only once userRecord is populated, so we never handle a
@@ -165,12 +178,9 @@ const basicLinkTokenObject = {
 app.post("/appServer/generate_link_token", async (req, res, next) => {
   try {
     let response;
-    // Use the same stable, non-PII client_user_id we created the Plaid user
-    // with, per Plaid's Link token guidance.
-    const clientUserId = await getLazyUserID();
     if (req.body.income === true) {
-      const userToken = await fetchOrCreateUserToken();
-      console.log(`User token returned: ${userToken}`);
+      const plaidUserId = await fetchOrCreatePlaidUserId();
+      console.log(`Plaid user ID returned: ${plaidUserId}`);
       const income_verification_object =
         req.body.incomeType === "payroll"
           ? { income_source_types: ["payroll"] }
@@ -179,11 +189,13 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
               bank_income: { days_requested: 60 },
             };
 
+      // With the New User APIs, the user_id returned by /user/create replaces
+      // both the legacy user_token and the `user` object for user-based
+      // products like Income.
       const newIncomeTokenObject = {
         ...basicLinkTokenObject,
-        user: { client_user_id: clientUserId },
         products: ["income_verification"],
-        user_token: userToken,
+        user_id: plaidUserId,
         webhook: webhookUrl,
         income_verification: income_verification_object,
       };
@@ -192,9 +204,11 @@ app.post("/appServer/generate_link_token", async (req, res, next) => {
       );
       response = await plaidClient.linkTokenCreate(newIncomeTokenObject);
     } else {
+      // Liabilities isn't a user-based product, so this Link token still
+      // identifies the end user with the `user` object.
       const newLiabilitiesTokenObject = {
         ...basicLinkTokenObject,
-        user: { client_user_id: clientUserId },
+        user: { client_user_id: await getLazyUserID() },
         products: ["liabilities"],
         webhook: webhookUrl,
       };
@@ -251,69 +265,45 @@ app.get("/appServer/fetch_liabilities", async (req, res, next) => {
 });
 
 /**
- * Returns the user token if one exists, or calls the /user/create endpoint
- * to generate a user token and then return it.
+ * Returns the Plaid user_id if one exists, or calls the /user/create endpoint
+ * to generate one and then return it.
+ *
+ * Under the New User APIs, /user/create returns a single `user_id` rather than
+ * a `user_token`. That user_id is the identifier you pass to Link and to every
+ * Income endpoint, and it's also what Plaid sends back on user-based webhooks.
+ * Setting `with_upgraded_user` opts integrations that predate December 10, 2025
+ * into the new behavior.
+ *
+ * Newly created users get a `usr_`-prefixed ID. Users you created before
+ * migrating keep their existing identifier, so don't assume the prefix.
  *
  * In this application, we call this on demand. If you wanted to create this
- * user token as soon as a user signs up for an account, that would be a
- * perfectly reasonable solution, as well.
+ * user as soon as a user signs up for an account, that would be a perfectly
+ * reasonable solution, as well.
  *
- * @returns {string} userToken The user token
+ * @returns {string} plaidUserId The Plaid user ID
  */
-const fetchOrCreateUserToken = async () => {
-  const userToken = userRecord[FIELD_USER_TOKEN];
+const fetchOrCreatePlaidUserId = async () => {
+  const plaidUserId = userRecord[FIELD_PLAID_USER_ID];
 
-  if (userToken == null || userToken === "") {
+  if (plaidUserId == null || plaidUserId === "") {
     // We're gonna need to generate one!
     const userId = await getLazyUserID();
-    console.log(`Got a user ID of ${userId}`);
+    console.log(`Got a client user ID of ${userId}`);
+    // /user/create is idempotent, so calling it again with a client_user_id
+    // we've already used returns the existing user rather than erroring.
     const response = await plaidClient.userCreate({
       client_user_id: userId,
+      with_upgraded_user: true,
     });
-    console.log(`New user token is  ${JSON.stringify(response.data)}`);
-    const newUserToken = response.data.user_token;
-    // We'll save this because this can only be done once per user
-    await updateUserRecord(FIELD_USER_TOKEN, newUserToken);
-    // This other user_id that gets returned is used by Plaid's webhooks to
-    // identify a specific user. In a real application, you would use this to
-    // know when it's safe to fetch income for a user who uploaded documents
-    // to Plaid for processing.
-    const userWebhookId = response.data.user_id;
-    await updateUserRecord(FIELD_PLAID_WEBHOOK_USER_ID, userWebhookId);
-    return newUserToken;
+    console.log(`New Plaid user is ${JSON.stringify(response.data)}`);
+    const newPlaidUserId = response.data.user_id;
+    await updateUserRecord(FIELD_PLAID_USER_ID, newPlaidUserId);
+    return newPlaidUserId;
   } else {
-    return userToken;
+    return plaidUserId;
   }
 };
-
-/**
- * Simulates what Income precheck might look like if you were to run it with
- * an employer that has a "HIGH" confidence level. This call only works
- * in the sandbox environment.
- */
-app.post("/appServer/simulate_precheck", async (req, res, next) => {
-  try {
-    if (process.env.PLAID_ENV !== "sandbox") {
-      res.status(500).json({
-        error: "This hard-coded example only works in the sandbox environment",
-      });
-      return;
-    }
-    const targetConfidence = req.body.confidence;
-    const employerName =
-      targetConfidence === "HIGH" ? "employer_good" : "Acme, Inc.";
-
-    const response = await plaidClient.creditPayrollIncomePrecheck({
-      user_token: userRecord[FIELD_USER_TOKEN],
-      employer: {
-        name: employerName,
-      },
-    });
-    res.json(response.data);
-  } catch (error) {
-    next(error);
-  }
-});
 
 /**
  * Return payroll income for the user, either downloaded from their payroll
@@ -322,7 +312,7 @@ app.post("/appServer/simulate_precheck", async (req, res, next) => {
 app.get("/appServer/get_payroll_income", async (req, res, next) => {
   try {
     const response = await plaidClient.creditPayrollIncomeGet({
-      user_token: userRecord[FIELD_USER_TOKEN],
+      user_id: userRecord[FIELD_PLAID_USER_ID],
     });
     res.json(response.data);
   } catch (error) {
@@ -336,7 +326,7 @@ app.get("/appServer/get_payroll_income", async (req, res, next) => {
 app.get("/appServer/get_bank_income", async (req, res, next) => {
   try {
     const response = await plaidClient.creditBankIncomeGet({
-      user_token: userRecord[FIELD_USER_TOKEN],
+      user_id: userRecord[FIELD_PLAID_USER_ID],
       options: {
         count: 3,
       },
@@ -372,8 +362,7 @@ app.post("/server/update_webhook", async (req, res, next) => {
 });
 
 const errorHandler = function (err, req, res, next) {
-  console.error(`Your error: ${JSON.stringify(err)}`);
-  console.error(err);
+  console.error("Your error:", describeError(err));
   if (err.response?.data != null) {
     res.status(500).send(err.response.data);
   } else {
@@ -432,26 +421,35 @@ webhookApp.post("/server/receive_webhook", async (req, res, next) => {
 
 function handleIncomeWebhook(code, requestBody) {
   switch (code) {
-    case "INCOME_VERIFICATION":
+    // Under the New User APIs, this webhook was renamed from
+    // INCOME_VERIFICATION, and its user_id is the same identifier returned by
+    // /user/create.
+    case "USER_INCOME_VERIFICATION":
       const verificationStatus = requestBody.verification_status;
-      const webhookUserId = requestBody.user_id;
+      const plaidUserId = requestBody.user_id;
       if (verificationStatus === "VERIFICATION_STATUS_PROCESSING_COMPLETE") {
         console.log(
-          `Plaid has successfully completed payroll processing for the user with the webhook identifier of ${webhookUserId}. You should probably call /paystubs/get to refresh your data.`
+          `Plaid has successfully completed payroll processing for the user with the Plaid user ID of ${plaidUserId}. You should probably call /paystubs/get to refresh your data.`
         );
       } else if (
         verificationStatus === "VERIFICATION_STATUS_PROCESSING_FAILED"
       ) {
         console.log(
-          `Plaid had trouble processing documents for the user with the webhook identifier of ${webhookUserId}. You should ask them to try again.`
+          `Plaid had trouble processing documents for the user with the Plaid user ID of ${plaidUserId}. You should ask them to try again.`
         );
       } else if (
         verificationStatus === "VERIFICATION_STATUS_PENDING_APPROVAL"
       ) {
         console.log(
-          `Plaid is waiting for the user with the webhook identifier of ${webhookUserId} to approve their income verification.`
+          `Plaid is waiting for the user with the Plaid user ID of ${plaidUserId} to approve their income verification.`
         );
       }
+      break;
+    // The legacy version of the webhook above. Integrations created under the
+    // New User APIs never receive it. If you're migrating, Plaid sends both
+    // versions in parallel -- handle one or the other, or you'll process every
+    // event twice.
+    case "INCOME_VERIFICATION":
       break;
     default:
       console.log(`Can't handle webhook code ${code}`);

@@ -2,5 +2,5 @@
   "accessToken": null,
   "incomeConnected": false,
   "userId": null,
-  "incomeUserToken": null
+  "plaidUserId": null
 }

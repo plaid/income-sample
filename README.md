@@ -40,11 +40,11 @@ When you first start up the app, you'll be prompted to connect to a bank to load
 >
 > When adding **bank income** in the Sandbox environment, you must use a non-OAuth bank (like Houndstooth Bank) and supply the credentials **`user_bank_income`** and **`{}`** and the MFA code of `1234` if you're asked for it. This is different from the credentials you will be shown at the bottom of the page! For more test accounts that work great with Income, see the [docs](https://plaid.com/docs/sandbox/test-credentials/#credit-and-income-testing-credentials).
 
-In the debug panel (the little accordion component at the bottom of the screen) is a button that simulates what the Income flow might look like if you were to run an income pre-check call with an employer that results in a "HIGH" confidence level. This call only works in Sandbox mode.
+In the debug panel (the little accordion component at the bottom of the screen) you can update the webhook URL that this app uses, which is handy when you're testing webhooks with a tunnel like ngrok. See [Receiving webhooks](#optional-receiving-webhooks) below.
 
 ## (Optional) Receiving webhooks
 
-When you're developing in the Sandbox environment, Document Income data is available almost immediately. In Production, however, it may take several minutes for Document Income data to be complete. In those situations, you want to listen for the [`INCOME_VERIFICATION`](https://plaid.com/docs/api/products/income/#income_verification) webhook to know when it's safe to fetch document data.
+When you're developing in the Sandbox environment, Document Income data is available almost immediately. In Production, however, it may take several minutes for Document Income data to be complete. In those situations, you want to listen for the [`USER_INCOME_VERIFICATION`](https://plaid.com/docs/api/products/income/#user_income_verification) webhook to know when it's safe to fetch document data.
 
 In our sample application, we have set up a second server on port 8001 to listen for webhooks. If you want to expose this port to the outside world so it can receive webhooks from Plaid, you might want to use a tool like ngrok to create a tunnel between the outside world and localhost:8001. If you have ngrok installed, you can do this by running the following command:
 
