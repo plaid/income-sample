@@ -11,9 +11,9 @@
   "author": "Todd Kerpelman",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.20.6",
-    "dotenv": "^16.6.1",
-    "express": "^4.22.1",
+    "body-parser": "^2.3.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "nodemon": "^3.1.11",
     "plaid": "^47.0.0",
     "uuid": "^14.0.1"
