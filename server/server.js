@@ -2,7 +2,6 @@
 require("dotenv").config();
 const fs = require("fs/promises");
 const express = require("express");
-const bodyParser = require("body-parser");
 const { Configuration, PlaidEnvironments, PlaidApi } = require("plaid");
 const { v4: uuidv4 } = require("uuid");
 
@@ -19,8 +18,8 @@ let webhookUrl =
   process.env.WEBHOOK_URL || "https://www.example.com/server/receive_webhook";
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // Set up the Plaid client
 const plaidConfig = new Configuration({
@@ -385,8 +384,8 @@ app.use(errorHandler);
 const WEBHOOK_PORT = process.env.WEBHOOK_PORT || 8001;
 
 const webhookApp = express();
-webhookApp.use(bodyParser.urlencoded({ extended: false }));
-webhookApp.use(bodyParser.json());
+webhookApp.use(express.urlencoded({ extended: false }));
+webhookApp.use(express.json());
 
 const webhookServer = webhookApp.listen(WEBHOOK_PORT, function () {
   console.log(

@@ -7,7 +7,7 @@
     "@chakra-ui/react": "^3.37.0",
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
-    "framer-motion": "^13.3.0",
+    "framer-motion": "^13.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-plaid-link": "^5.0.0"
@@ -15,9 +15,9 @@
   "devDependencies": {
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^5.7.3",
-    "vite": "^8.0.8"
+    "vite": "^8.3.0"
   },
   "scripts": {
     "start": "vite",
