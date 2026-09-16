@@ -6,6 +6,7 @@ import {
   Flex,
   Heading,
   VStack,
+  defaultSystem,
 } from "@chakra-ui/react";
 import { UserContext, PlaidConnectStatus } from "./components/UserContext";
 import UserStatus from "./components/UserStatus";
@@ -20,7 +21,7 @@ function App() {
   });
 
   return (
-    <ChakraProvider>
+    <ChakraProvider value={defaultSystem}>
       <Flex
         height="100vh"
         alignItems="center"
@@ -36,10 +37,10 @@ function App() {
           p={4}
           mt={6}
           rounded={8}
-          spacing={6}
+          gap={6}
           width="80vw"
         >
-          <VStack spacing={2}>
+          <VStack gap={2}>
             <Heading>Financing</Heading>
             <Text fontSize="md">
               Find out if you qualify for financing for a pre-owned hoverboard!

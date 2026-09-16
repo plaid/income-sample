@@ -89,7 +89,7 @@ const PayrollIncome = () => {
                 mx="2"
                 px="3"
               >
-                <Box mt="1" fontWeight="semibold" as="h4" isTruncated>
+                <Box mt="1" fontWeight="semibold" as="h4" truncate>
                   {payroll.employer}
                 </Box>
                 <Box fontSize="sm">
@@ -117,9 +117,9 @@ const PayrollIncome = () => {
                   </Box>
                 </Box>
                 {payroll.downloaded_from_provider ? (
-                  <Badge colorScheme="green">Downloaded</Badge>
+                  <Badge colorPalette="green">Downloaded</Badge>
                 ) : (
-                  <Badge colorScheme="yellow">Scanned</Badge>
+                  <Badge colorPalette="yellow">Scanned</Badge>
                 )}
               </Box>
             ))}

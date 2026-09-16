@@ -55,7 +55,7 @@ const Liabilities = () => {
             mx="2"
             px="3"
           >
-            <Box mt="1" as="h4" isTruncated>
+            <Box mt="1" as="h4" truncate>
               {liability.name}
             </Box>
             <Box fontSize="sm">{liability.type}</Box>

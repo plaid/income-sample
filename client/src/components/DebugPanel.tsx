@@ -1,10 +1,6 @@
 import {
   Accordion,
-  AccordionItem,
-  AccordionButton,
   Box,
-  AccordionPanel,
-  AccordionIcon,
   Button,
   Input,
   Flex,
@@ -28,9 +24,9 @@ const DebugPanel = () => {
   };
 
   return (
-    <Accordion allowToggle width="100%">
-      <AccordionItem>
-        <AccordionPanel pb={4}>
+    <Accordion.Root collapsible width="100%" defaultValue={[]}>
+      <Accordion.Item value="debug">
+        <Accordion.ItemContent pb={4}>
           <Flex gap={2}>
             <Input
               placeholder="https://webhookurlgoeshere.com/server/receive_webhook"
@@ -40,24 +36,24 @@ const DebugPanel = () => {
             <Spacer />
             <Button
               paddingX="2rem"
-              colorScheme="yellow"
+              colorPalette="yellow"
               onClick={() => updateWebhook()}
             >
               Update webhook
             </Button>
           </Flex>
-        </AccordionPanel>
+        </Accordion.ItemContent>
 
         <h2>
-          <AccordionButton>
+          <Accordion.ItemTrigger>
             <Box flex="1" textAlign="left">
               Debug items
             </Box>
-            <AccordionIcon />
-          </AccordionButton>
+            <Accordion.ItemIndicator />
+          </Accordion.ItemTrigger>
         </h2>
-      </AccordionItem>
-    </Accordion>
+      </Accordion.Item>
+    </Accordion.Root>
   );
 };
 
