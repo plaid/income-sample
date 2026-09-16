@@ -9,9 +9,9 @@ export enum IncomeType {
 }
 
 interface Props {
-  income: boolean;
-  incomeType: IncomeType;
-  buttonText: string;
+  income?: boolean;
+  incomeType?: IncomeType;
+  buttonText?: string;
 }
 
 /**
@@ -21,7 +21,11 @@ interface Props {
  * or not you're using Plaid Income.
  */
 
-const LinkLoader = (props: Props) => {
+const LinkLoader = ({
+  income = false,
+  incomeType = IncomeType.Payroll,
+  buttonText = "Connect my bank",
+}: Props) => {
   const [linkToken, setLinkToken] = useState("");
   const { user, setUser } = useContext(UserContext);
 
@@ -34,7 +38,7 @@ const LinkLoader = (props: Props) => {
 
   const linkSuccess = async (public_token: string | null) => {
     if (public_token != null && public_token !== "") {
-      if (props.income) {
+      if (income) {
         await incomeSuccess(public_token);
       } else {
         await accessTokenSuccess(public_token);
@@ -73,10 +77,10 @@ const LinkLoader = (props: Props) => {
   };
 
   const fetchLinkToken = async () => {
-    const messageBody = props.income
+    const messageBody = income
       ? JSON.stringify({
           income: true,
-          incomeType: props.incomeType,
+          incomeType: incomeType,
         })
       : JSON.stringify({
           income: false,
@@ -100,18 +104,12 @@ const LinkLoader = (props: Props) => {
 
   return (
     <>
-      <Button colorScheme="green" onClick={() => loadAndLaunchLink()}>
-        {props.buttonText}
+      <Button colorPalette="green" onClick={() => loadAndLaunchLink()}>
+        {buttonText}
       </Button>
       <LaunchLink token={linkToken} successCallback={linkSuccess} />
     </>
   );
-};
-
-LinkLoader.defaultProps = {
-  income: false,
-  incomeType: IncomeType.Payroll,
-  buttonText: "Connect my bank",
 };
 
 export default LinkLoader;

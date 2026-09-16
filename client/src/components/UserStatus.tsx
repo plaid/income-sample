@@ -47,7 +47,7 @@ const UserStatus = () => {
   }, [user, getInfo]);
 
   return (
-    <VStack mt={3} spacing={6}>
+    <VStack mt={3} gap={6}>
       {user.liabilitiesConnected === PlaidConnectStatus.Unknown ? (
         <Text fontSize="sm">Getting connection status</Text>
       ) : user.liabilitiesConnected === PlaidConnectStatus.Connected ? (

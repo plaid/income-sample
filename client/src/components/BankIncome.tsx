@@ -101,10 +101,10 @@ const BankIncome = () => {
                 mx="2"
                 px="3"
               >
-                <Box mt="1" fontWeight="semibold" as="h4" isTruncated>
+                <Box mt="1" fontWeight="semibold" as="h4" truncate>
                   {e.bank_name}
                 </Box>
-                <Box fontSize="sm" isTruncated>
+                <Box fontSize="sm" truncate>
                   {e.description}
                 </Box>
                 <Box as="b">
